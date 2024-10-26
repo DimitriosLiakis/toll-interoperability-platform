@@ -31,15 +31,16 @@ class DbService {
         }
         return this.instance;
     }
+    
     async getProvider(input) {
         try {
+            console.log("Received input for query:", input);  // Log input
             const response = await new Promise((resolve, reject) => {
                 let query = '';
                 let queryParams = [];
     
-                // Check if the input is a number (assume it's transceiver_id) or a string (assume it's driver_name)
+                // Check if input is a number for transceiver_id or a string for driver_name
                 if (isNaN(input)) {
-                    // Input is a driver's name
                     query = `
                         SELECT DISTINCT c.* 
                         FROM Transceiver t
@@ -49,7 +50,6 @@ class DbService {
                     `;
                     queryParams = [input];
                 } else {
-                    // Input is a transceiver_id
                     query = `
                         SELECT c.* 
                         FROM Transceiver t
@@ -59,11 +59,17 @@ class DbService {
                     queryParams = [input];
                 }
     
-                // Execute the query using parameterized input to prevent SQL injection
+                console.log("Executing query:", query);  // Log query
+                console.log("With parameters:", queryParams);  // Log query parameters
+    
+                // Execute the query
                 connection.query(query, queryParams, (err, results) => {
+                    console.log("Query executed"); // Log execution attempt
                     if (err) {
+                        console.error("Error during query execution:", err);  // Log error details
                         reject(new Error(err.message));
                     } else {
+                        console.log("Query results:", results);  // Log results
                         resolve(results);
                     }
                 });
@@ -71,9 +77,11 @@ class DbService {
     
             return response;
         } catch (error) {
-            console.log(error);
+            console.log("Error:", error);
+            throw error;  // Ensure the error propagates
         }
     }
     
-}
+    
+}     
 module.exports = DbService;
