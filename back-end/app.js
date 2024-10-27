@@ -14,7 +14,7 @@ const passing_toll_routes = require('./routers/passing_toll_router')
 // Use the routes
 app.use('/provider', providerRoutes);
 
-app.post('/passing_toll', passing_toll_routes);
+app.use('/passing_toll', passing_toll_routes);
 
 // Root route
 app.get('/', (req, res) => {

@@ -91,67 +91,49 @@ class DbService {
                 throw new Error("Both input1 (Transceiver ID) and input2 (Toll ID) must be provided");
             }
 
-            const response = await new Promise((resolve, reject) => {
-                // Insert a record into Passage table
-                const passageQuery = `INSERT INTO Passage (toll_id, transceiver_id) VALUES (?, ?)`;
-                connection.query(passageQuery, [input2, input1], (err, passageResults) => {
-                    if (err) {
-                        console.error("Error inserting into Passage:", err);
-                        return reject(new Error("Failed to insert into Passage"));
-                    }
-                    console.log("Passage record inserted:", passageResults);
+            // Insert a record into Passage table
+            const [passageResults] = await promisePool.query(`
+                INSERT INTO Passage (toll_id, transceiver_id) VALUES (?, ?)
+            `, [input2, input1]);
 
-                    // Query for operator_id from Toll table
-                    const tollQuery = `SELECT operator_id FROM Toll WHERE toll_id = ?`;
-                    connection.query(tollQuery, [input2], (err, tollResults) => {
-                        if (err) {
-                            console.error("Error fetching Toll data:", err);
-                            return reject(new Error("Failed to retrieve Toll data"));
-                        }
+            console.log("Passage record inserted:", passageResults);
 
-                        if (!tollResults.length) {
-                            return reject(new Error("No Toll entry found for the given toll_id"));
-                        }
+            // Query for operator_id from Toll table
+            const [tollResults] = await promisePool.query(`
+                SELECT operator_id FROM Toll WHERE toll_id = ?
+            `, [input2]);
 
-                        const operatorId = tollResults[0].operator_id;
+            if (!tollResults.length) {
+                throw new Error("No Toll entry found for the given toll_id");
+            }
 
-                        // Query for company_id from Transceiver table
-                        const transceiverQuery = `SELECT company_id FROM Transceiver WHERE transceiver_id = ?`;
-                        connection.query(transceiverQuery, [input1], (err, transceiverResults) => {
-                            if (err) {
-                                console.error("Error fetching Transceiver data:", err);
-                                return reject(new Error("Failed to retrieve Transceiver data"));
-                            }
+            let operatorId = tollResults[0].operator_id;
 
-                            if (!transceiverResults.length) {
-                                return reject(new Error("No Transceiver entry found for the given transceiver_id"));
-                            }
+            // Query for company_id from Transceiver table
+            const [transceiverResults] = await promisePool.query(`
+                SELECT company_id FROM Transceiver WHERE transceiver_id = ?
+            `, [input1]);
 
-                            const companyId = transceiverResults[0].company_id;
+            if (!transceiverResults.length) {
+                throw new Error("No Transceiver entry found for the given transceiver_id");
+            }
 
-                            // Check if company_id matches operator_id
-                            if (companyId === operatorId) {
-                                console.log("No debt insertion required: company_id matches operator_id");
-                                return resolve({ passageResults, message: "No new debt needed as company_id matches operator_id" });
-                            }
+            let companyId = transceiverResults[0].company_id;
 
-                            // If company_id does not match operator_id, create a new debt entry
-                            const debtQuery = `INSERT INTO Debt (transceiver_id, toll_id, amount) VALUES (?, ?, ?)`;
-                            const debtAmount = calculateDebtAmount(input1, input2); // Assuming this function calculates debt
-                            connection.query(debtQuery, [input1, input2, debtAmount], (err, debtResults) => {
-                                if (err) {
-                                    console.error("Error inserting new debt:", err);
-                                    return reject(new Error("Failed to insert new debt"));
-                                }
-                                console.log("Debt inserted successfully:", debtResults);
-                                resolve({ passageResults, debtResults });
-                            });
-                        });
-                    });
-                });
-            });
+            // Check if company_id matches operator_id
+            if (companyId === operatorId) {
+                console.log("No debt insertion required: company_id matches operator_id");
+                return { passageResults, message: "No new debt needed as company_id matches operator_id" };
+            }
 
-            return response;
+            // If company_id does not match operator_id, create a new debt entry
+            const debtAmount = calculateDebtAmount(input1, input2); // Ensure this function is defined
+            const [debtResults] = await promisePool.query(`
+                INSERT INTO Debt (transceiver_id, toll_id, amount) VALUES (?, ?, ?)
+            `, [input1, input2, debtAmount]);
+
+            console.log("Debt inserted successfully:", debtResults);
+            return { passageResults, debtResults };
         } catch (error) {
             console.error("Error:", error);
             throw error;
