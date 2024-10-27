@@ -7,13 +7,18 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // Allows the server to parse incoming JSON data
 
-const providerRoutes = require('./routers/provider');
+// Import Routes
+const providerRoutes = require('./routers/provider_router');
+const passing_toll_routes = require('./routers/passing_toll_router')
 
+// Use the routes
 app.use('/provider', providerRoutes);
+
+app.post('/passing_toll', passing_toll_routes);
 
 // Root route
 app.get('/', (req, res) => {
-    res.send('Simple root-route, PAO OLE OLE');
+    res.send('Simple root-route');
 });
 
 module.exports = app;
