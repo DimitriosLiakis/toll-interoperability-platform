@@ -1,0 +1,31 @@
+{
+  "name": "cli-client",
+  "version": "1.0.0",
+  "description": "Ενδεικτικά περιεχόμενα:",
+  "bin": {
+   "my-cli": "./bin/index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.7",
+    "chai": "^5.1.2",
+    "chalk": "^5.3.0",
+    "cli-table": "^0.3.11",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "inquirer": "^12.1.0",
+    "mocha": "^10.8.2",
+    "ora": "^8.1.1",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
