@@ -1,8 +1,8 @@
 const axios = require('axios');
 
 const apiClient = axios.create({
-    baseURL: process.env.API_BASE_URL,
-    headers: { 'Authorization': `Bearer ${process.env.API_KEY}` },
+    baseURL: process.env.API_BASE_URL || 'http://mock-api',
+    headers: { 'Authorization': `Bearer ${process.env.API_KEY || 'mock-api-key'}` },
 });
 
 async function fetchData(endpoint) {
@@ -15,7 +15,14 @@ async function postData(endpoint, data) {
     return response.data;
 }
 
-// Similar structure for update and delete functions...
+async function updateData(endpoint, id, data) {
+    const response = await apiClient.put(`/${endpoint}/${id}`, data);
+    return response.data;
+}
 
-module.exports = { fetchData, postData };
+async function deleteData(endpoint, id) {
+    const response = await apiClient.delete(`/${endpoint}/${id}`);
+    return response.data;
+}
 
+module.exports = { fetchData, postData, updateData, deleteData };
