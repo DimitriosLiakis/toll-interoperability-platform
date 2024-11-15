@@ -1,6 +1,5 @@
 const app = require('./app'); // Import the configured Express app
 const dotenv = require('dotenv');
-
 dotenv.config();
 
 // Define a port to listen on
