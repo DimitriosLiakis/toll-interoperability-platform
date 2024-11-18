@@ -22,6 +22,14 @@ def insert_data(df):
                 """,
                 (row['timestamp'], row['tollID'], row['tagRef'], row['tagHomeID'], row['charge'])
             )
+            cursor.execute(
+                """
+                UPDATE Transceiver 
+                SET balance = balance - %s
+                WHERE tagRef=%s
+                """,
+                (row['charge'], row['tagRef'])
+            )
         
         conn.commit()
         print("OK")  # Output "OK" if insert was successful
