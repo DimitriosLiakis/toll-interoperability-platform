@@ -164,6 +164,8 @@ CREATE TABLE `Transceiver` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+ALTER TABLE Passages ADD CONSTRAINT same_passage UNIQUE (tollID, tagRef, timestamp, tagHomeID, charge);
+
 --
 -- Final view structure for view `ActiveDebtsWithDetails`
 --
