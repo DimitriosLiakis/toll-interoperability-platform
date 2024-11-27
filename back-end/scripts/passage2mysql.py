@@ -13,7 +13,9 @@ def insert_data(df):
             database='draft_b'
         )
         cursor = conn.cursor()
-        
+        cursor.execute(
+                    """UPDATE Debt SET is_active = 0;"""
+        )
         for _, row in df.iterrows():
             cursor.execute(
                 """select passage_id from Passages where timestamp=%s AND tollID=%s AND tagRef=%s AND tagHomeID=%s AND charge=%s""",
@@ -81,9 +83,27 @@ def insert_data(df):
                 )
 
 
+                cursor.execute (
+                    """
+                    UPDATE TotalDebts td
+                    JOIN (
+                        SELECT debtor_company_id, 
+                            creditor_company_id, 
+                            SUM(amount) AS total_amount
+                        FROM Debt
+                        WHERE is_active = 1
+                        GROUP BY debtor_company_id, creditor_company_id
+                    ) AS debt_summary
+                    ON td.debtor_company_id = debt_summary.debtor_company_id
+                    AND td.creditor_company_id = debt_summary.creditor_company_id
+                    SET td.total_amount = debt_summary.total_amount;
+                    """
+                )
+                    
+                
             
-        conn.commit()
-        print("OK")  # Output "OK" if insert was successful
+        conn.commit() # this commits the transactions, it establishes it.
+        print("OK, queries executed without error")  # Output "OK" if insert was successful
 
     except Error as e:
         print(f"Error: {e}")
