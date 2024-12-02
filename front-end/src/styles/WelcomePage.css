@@ -1,0 +1,36 @@
+.welcome-container {
+    text-align: center;
+    margin-top: 50px;
+    padding: 30px;
+    color: #444; /* Slightly darker for readability */
+    background: #f9fafb; /* Soft background color */
+}
+
+.welcome-container h1 {
+    font-size: 2.8rem; /* Slightly larger heading */
+    color: #005bb5; /* More refined blue */
+    margin-bottom: 25px;
+}
+
+.welcome-container p {
+    font-size: 1.2rem;
+    margin-bottom: 35px;
+    color: #666; /* Softer text color */
+}
+
+.welcome-button {
+    display: inline-block;
+    padding: 12px 25px;
+    background: linear-gradient(90deg, #007bff, #0056b3); /* Gradient button */
+    color: white;
+    font-size: 1.1rem;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background 0.3s ease, transform 0.2s ease; /* Smooth hover */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle depth */
+}
+
+.welcome-button:hover {
+    background: #004494; /* Darker shade on hover */
+    transform: scale(1.05); /* Slight zoom effect */
+}
