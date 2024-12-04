@@ -57,7 +57,7 @@ def insert_data(df):
                 continue
             transceiver_company = transceiver_company[0]
 
-            # Retrieve OpID (Operator ID) from Toll for tollID
+            # Retrieve OpID (Operator ID = Company ID) from Toll for tollID
             cursor.execute(
                 """
                 SELECT OpID
@@ -71,6 +71,7 @@ def insert_data(df):
                 print(f"No OpID found for Toll_id: {row['tollID']}")
                 continue
             toll_op_id = toll_op_id[0]
+            print("Toll company = ", toll_op_id)
 
             # Check if companies are different and insert debt if necessary
             if transceiver_company != toll_op_id:
