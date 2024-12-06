@@ -19,7 +19,7 @@ const passing_toll = async (req, res) => {
 
     // Check if the file exists
     if (!fs.existsSync(csvFilePath)) {
-        return res.status(400).json({ error: 'File not found in uploads directory.' });
+        return res.status(400).json({ error: 'File not found in uploads directory.' }); // 400 Bad Request
     }
 
     // Escape special characters in the path (optional, for safety)
@@ -28,7 +28,6 @@ const passing_toll = async (req, res) => {
 
     // Use the DbService to access the database
     const dbService = DbService.getDbServiceInstance();
-
     try {
         console.log('Testing database connection...');
         const lastPassageId = await dbService.getLastPassageId();
@@ -49,14 +48,16 @@ const passing_toll = async (req, res) => {
         const newRecords = await dbService.getRecordsBetweenIds(lastPId_before);
         const lastPId_after = await dbService.getLastPassageId();
 
+        // If no new records found
+        if (newRecords.length === 0) {
+            return res.status(404).json({ error: 'No new records found after last passage.' }); // 404 Not Found
+        }
+
         // Determine response format
         const format = req.query.format || 'json';
 
         if (format === 'csv') {
             // Convert records to CSV format
-            if (newRecords.length === 0) {
-                return res.status(200).send('No records found');
-            }
             const csvHeaders = Object.keys(newRecords[0] || {}).join(',');
             const csvRows = newRecords.map(record =>
                 Object.values(record).join(',')
@@ -78,7 +79,7 @@ const passing_toll = async (req, res) => {
     } catch (error) {
         // Handle errors in running the Python script or fetching records
         console.error('Error:', error.message || error.stderr || 'Unknown error.');
-        res.status(500).json({ error: error.message || 'An unexpected error occurred.' });
+        res.status(500).json({ error: error.message || 'An unexpected error occurred.' }); // 500 Internal Server Error
     }
 };
 

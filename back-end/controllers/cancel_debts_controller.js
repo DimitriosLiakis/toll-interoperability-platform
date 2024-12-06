@@ -31,6 +31,11 @@ const cancel_debts = async (req, res) => {
 
         console.log("The filepaths of the figures are:", filePaths);
 
+        // If no files were returned, return a 204 No Content response
+        if (filePaths.length === 0 || filePaths[0] === '') {
+            return res.status(204).send(); // No Content
+        }
+
         // Move the .png files to the uploads directory
         const movedFiles = [];
         filePaths.forEach((file) => {
@@ -45,6 +50,11 @@ const cancel_debts = async (req, res) => {
                 console.warn(`File not found: ${oldPath}`);
             }
         });
+
+        // If no files were successfully moved, return a 204 No Content response
+        if (movedFiles.length === 0) {
+            return res.status(204).send(); // No Content
+        }
 
         // Check the requested format (json or csv)
         const format = req.query.format || 'json';
@@ -64,7 +74,7 @@ const cancel_debts = async (req, res) => {
             return res.send(csvData);
         }
 
-        // Default response as JSON
+        // Default response as JSON (if files are moved successfully)
         res.status(200).json({
             message: "The .png files have been processed and moved to the uploads directory.",
             files: movedFiles,

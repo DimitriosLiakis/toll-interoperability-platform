@@ -71,6 +71,7 @@ exports.uploadCsv = async (req, res) => {
           return res.send(fileContent); // Send CSV content
 
         } catch (readError) {
+          console.error('Error reading the file:', readError);
           return res.status(500).json({ message: 'Error reading the file: ' + readError.message });
         }
       } else {
