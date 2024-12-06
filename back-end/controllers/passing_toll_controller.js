@@ -26,11 +26,9 @@ const passing_toll = async (req, res) => {
     const escapedFilePath = csvFilePath.replace(/(["\s'$`\\])/g, '\\$1');
     const python_escaped = python_path.replace(/(["\s'$`\\])/g, '\\$1');
 
-
     // Use the DbService to access the database
     const dbService = DbService.getDbServiceInstance();
 
-    // Test the connection by calling a method that queries the database
     try {
         console.log('Testing database connection...');
         const lastPassageId = await dbService.getLastPassageId();
@@ -44,14 +42,33 @@ const passing_toll = async (req, res) => {
         const { stdout, stderr } = await execPromise(
             `python3 "${python_escaped}" "${escapedFilePath}"`
         );
-        
+
         console.log('Python script executed successfully.');
 
         // Fetch the new records added since the last passage ID
         const newRecords = await dbService.getRecordsBetweenIds(lastPId_before);
         const lastPId_after = await dbService.getLastPassageId();
 
-        // Respond with the success message and inserted records
+        // Determine response format
+        const format = req.query.format || 'json';
+
+        if (format === 'csv') {
+            // Convert records to CSV format
+            if (newRecords.length === 0) {
+                return res.status(200).send('No records found');
+            }
+            const csvHeaders = Object.keys(newRecords[0] || {}).join(',');
+            const csvRows = newRecords.map(record =>
+                Object.values(record).join(',')
+            );
+            const csvData = [csvHeaders, ...csvRows].join('\n');
+
+            res.setHeader('Content-Type', 'text/csv');
+            res.attachment('new_records.csv');
+            return res.send(csvData);
+        }
+
+        // Default response as JSON
         res.status(200).json({
             message: stdout.trim(),
             lastPId_before,

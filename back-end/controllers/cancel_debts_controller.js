@@ -46,8 +46,26 @@ const cancel_debts = async (req, res) => {
             }
         });
 
-        // Respond with success
-        res.json({
+        // Check the requested format (json or csv)
+        const format = req.query.format || 'json';
+
+        if (format === 'csv') {
+            // Convert the moved files list to CSV format
+            const csvHeaders = 'File Name, File Path';
+            const csvRows = movedFiles.map(file => {
+                return `"${path.basename(file)}", "${file}"`; // CSV format: file name and full path
+            });
+
+            const csvData = [csvHeaders, ...csvRows].join('\n');
+
+            // Set the response headers for CSV and send the data
+            res.setHeader('Content-Type', 'text/csv');
+            res.attachment('moved_files.csv');
+            return res.send(csvData);
+        }
+
+        // Default response as JSON
+        res.status(200).json({
             message: "The .png files have been processed and moved to the uploads directory.",
             files: movedFiles,
         });

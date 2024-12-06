@@ -1,15 +1,21 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { promisify } = require('util');
+const readFileAsync = promisify(fs.readFile); // Promisify fs.readFile for async/await
 
 // Multer configuration for file storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.resolve(__dirname, '../uploads'); // Fix: Ensure path is correct
+    const uploadDir = path.resolve(__dirname, '../uploads'); // Ensure path is correct
+    // Create upload directory if it does not exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
     cb(null, uploadDir); // Save files in 'uploads' directory
   },
   filename: (req, file, cb) => {
-    const uploadPath = path.resolve(__dirname, '../uploads/passages.csv'); // Fix: Resolve path
+    const uploadPath = path.resolve(__dirname, '../uploads/passages.csv'); // Resolve path
     if (fs.existsSync(uploadPath)) {
       fs.unlinkSync(uploadPath); // Remove existing passages.csv if it exists
     }
@@ -33,24 +39,55 @@ const upload = multer({
   },
 }).single('file');
 
-// Controller function for file upload
-exports.uploadCsv = (req, res) => {
-  upload(req, res, (err) => {
-    if (err) {
-      return res.status(400).json({ message: err.message });
-    }
+// Controller function for file upload and CSV response
+exports.uploadCsv = async (req, res) => {
+  try {
+    // First, attempt to upload the file
+    upload(req, res, async (err) => {
+      if (err) {
+        // If there's an error during file upload
+        return res.status(400).json({ message: err.message });
+      }
 
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded.' });
-    }
+      // Check if no file was uploaded
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded.' });
+      }
 
-    res.status(200).json({
-      message: 'CSV file uploaded successfully!',
-      file: {
-        filename: 'passages.csv',
-        path: req.file.path,
-        size: req.file.size,
-      },
+      // Check if the format query parameter exists (defaults to 'json')
+      const format = req.query.format || 'json';
+
+      if (format === 'csv') {
+        // If the requested format is CSV, read the file and send as CSV content
+        try {
+          const csvFilePath = req.file.path;
+
+          // Read the CSV file asynchronously
+          const fileContent = await readFileAsync(csvFilePath, 'utf8');
+
+          // Set response headers for CSV
+          res.setHeader('Content-Type', 'text/csv');
+          res.attachment('passages.csv');
+          return res.send(fileContent); // Send CSV content
+
+        } catch (readError) {
+          return res.status(500).json({ message: 'Error reading the file: ' + readError.message });
+        }
+      } else {
+        // Default to JSON response
+        res.status(200).json({
+          message: 'CSV file uploaded successfully!',
+          file: {
+            filename: 'passages.csv',
+            path: req.file.path,
+            size: req.file.size,
+          },
+        });
+      }
     });
-  });
+  } catch (error) {
+    // Catch any unexpected errors
+    console.error('Unexpected error:', error.message);
+    res.status(500).json({ message: 'An unexpected error occurred.' });
+  }
 };
