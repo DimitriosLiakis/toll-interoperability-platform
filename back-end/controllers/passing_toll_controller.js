@@ -52,7 +52,7 @@ const passing_toll = async (req, res) => {
         const lastPId_after = await dbService.getLastPassageId();
 
         // Respond with the success message and inserted records
-        res.json({
+        res.status(200).json({
             message: stdout.trim(),
             lastPId_before,
             lastPId_after,

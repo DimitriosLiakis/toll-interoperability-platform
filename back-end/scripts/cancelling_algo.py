@@ -7,6 +7,10 @@ import os
 import time
 import networkx as nx
 import matplotlib.pyplot as plt
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class Solution:
     def __init__(self):
@@ -23,7 +27,6 @@ class Solution:
                 heapq.heappush(self.minQ, (company, net_amount))
 
     def solveTransaction(self):
-        
         while self.minQ and self.maxQ:
             maxCreditEntry = heapq.heappop(self.maxQ)
             maxDebitEntry = heapq.heappop(self.minQ)
@@ -42,17 +45,17 @@ class Solution:
             else:
                 owed_amount = -maxDebitEntry[1]
                 heapq.heappush(self.maxQ, (creditor, transaction_val))
+
             try:
                 conn = mysql.connector.connect(
-                    host='localhost',
-                    user='root',
-                    password='2002',
-                    database='draft_b'
+                    host=os.getenv('HOST'),
+                    user=os.getenv('DUSER'),
+                    password=os.getenv('PASSWORD'),
+                    database=os.getenv('DATABASE')
                 )
                 cursor = conn.cursor()
 
-
-                cursor.execute("""UPDATE TotalDebts SET total_amount = %s where debtor_company_id = %s and creditor_company_id = %s""",
+                cursor.execute("""UPDATE TotalDebts SET total_amount = %s WHERE debtor_company_id = %s AND creditor_company_id = %s""",
                                (owed_amount, debtor, creditor))
                 conn.commit()
                 cursor.close()
@@ -61,8 +64,6 @@ class Solution:
             except Error as e:
                 print(f"Error: {e}")
                 sys.exit(1)
-
-            # print(f"Company {debtor} pays {owed_amount:.2f} to Company {creditor}")
 
     def minCashFlow(self, graph):
         amount = {company: 0 for company in graph}
@@ -79,10 +80,10 @@ class Solution:
 def fill_graph(graph):
     try:
         conn = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='2002',
-            database='draft_b'
+            host=os.getenv('HOST'),
+            user=os.getenv('DUSER'),
+            password=os.getenv('PASSWORD'),
+            database=os.getenv('DATABASE')
         )
         cursor = conn.cursor(dictionary=True)
 
@@ -98,14 +99,10 @@ def fill_graph(graph):
                 graph[debtor] = {}
             graph[debtor][creditor] = amount
 
-        # print("Graph populated from database:")
-        # print(graph)
-
         cursor.execute("""UPDATE TotalDebts SET total_amount = 0.00""")
         conn.commit()
         cursor.close()
         conn.close()
-        # time.sleep(10)
 
     except Error as e:
         print(f"Error: {e}")
@@ -115,13 +112,11 @@ def visualize_graph(graph, title, filename):
     """Visualize the graph using NetworkX and Matplotlib, excluding zero-cost edges."""
     G = nx.DiGraph()
 
-    # Add edges only if the amount is greater than 0
     for debtor, creditors in graph.items():
         for creditor, amount in creditors.items():
-            if amount > 0:  # Exclude edges with zero cost
+            if amount > 0:
                 G.add_edge(debtor, creditor, weight=amount)
 
-    # Adjust spring_layout parameters for better spacing
     pos = nx.spring_layout(G, k=1, scale=1)
     edge_labels = nx.get_edge_attributes(G, 'weight')
 
@@ -129,28 +124,24 @@ def visualize_graph(graph, title, filename):
     nx.draw(G, pos, with_labels=True, node_color="lightblue", node_size=2000, font_size=10, font_weight="bold", arrowsize=20)
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=8)
 
-    # Save the figure to a specific directory
-    output_dir = "./"  # Current directory for simplicity
+    output_dir = "./"
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, f"{filename}.png")
 
     plt.savefig(output_path, format="png", dpi=300)
     plt.close()
 
-    # Print the full file path for the Node.js script
     print(output_path)
 
 if __name__ == "__main__":
     graph1 = {}
     graph2 = {}
-    # print("filling the graph")
+
     fill_graph(graph1)
 
-    # print("graph filled")
-    # print("\nSolution:")
     S = Solution()
     S.minCashFlow(graph1)
-    # print("we calculated the solution")
+
     fill_graph(graph2)
     visualize_graph(graph1, "Initial Debt Graph", "initial_debts")
     visualize_graph(graph2, "Final Debt Graph", "final_debts")
