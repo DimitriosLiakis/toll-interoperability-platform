@@ -62,7 +62,7 @@ class Solution:
                 print(f"Error: {e}")
                 sys.exit(1)
 
-            print(f"Company {debtor} pays {owed_amount:.2f} to Company {creditor}")
+            # print(f"Company {debtor} pays {owed_amount:.2f} to Company {creditor}")
 
     def minCashFlow(self, graph):
         amount = {company: 0 for company in graph}
@@ -98,8 +98,8 @@ def fill_graph(graph):
                 graph[debtor] = {}
             graph[debtor][creditor] = amount
 
-        print("Graph populated from database:")
-        print(graph)
+        # print("Graph populated from database:")
+        # print(graph)
 
         cursor.execute("""UPDATE TotalDebts SET total_amount = 0.00""")
         conn.commit()
@@ -111,7 +111,7 @@ def fill_graph(graph):
         print(f"Error: {e}")
         sys.exit(1)
 
-def visualize_graph(graph, title, filename=None):
+def visualize_graph(graph, title, filename):
     """Visualize the graph using NetworkX and Matplotlib, excluding zero-cost edges."""
     G = nx.DiGraph()
 
@@ -122,28 +122,35 @@ def visualize_graph(graph, title, filename=None):
                 G.add_edge(debtor, creditor, weight=amount)
 
     # Adjust spring_layout parameters for better spacing
-    pos = nx.spring_layout(G, k=1, scale=1)  # Increase `k` for more spacing between nodes
+    pos = nx.spring_layout(G, k=1, scale=1)
     edge_labels = nx.get_edge_attributes(G, 'weight')
 
-    plt.figure(figsize=(12, 10))  # Larger figure size for better readability
+    plt.figure(figsize=(12, 10))
     nx.draw(G, pos, with_labels=True, node_color="lightblue", node_size=2000, font_size=10, font_weight="bold", arrowsize=20)
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=8)
-    plt.title(title)
-    
-    # Save the figure if a filename is provided
-    if filename:
-        os.makedirs("../debt_figures", exist_ok=True)  # Ensure the directory exists
-        plt.savefig(f"../debt_figures/{filename}.png", format="png", dpi=300)
-    # plt.show()
+
+    # Save the figure to a specific directory
+    output_dir = "./"  # Current directory for simplicity
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f"{filename}.png")
+
+    plt.savefig(output_path, format="png", dpi=300)
+    plt.close()
+
+    # Print the full file path for the Node.js script
+    print(output_path)
 
 if __name__ == "__main__":
     graph1 = {}
     graph2 = {}
+    # print("filling the graph")
     fill_graph(graph1)
 
-    print("\nSolution:")
+    # print("graph filled")
+    # print("\nSolution:")
     S = Solution()
     S.minCashFlow(graph1)
+    # print("we calculated the solution")
     fill_graph(graph2)
     visualize_graph(graph1, "Initial Debt Graph", "initial_debts")
     visualize_graph(graph2, "Final Debt Graph", "final_debts")

@@ -11,6 +11,7 @@ app.use(express.json()); // Allows the server to parse incoming JSON data
 const passing_toll_routes = require('./routers/passing_toll_router');
 const upload_passages_routes = require('./routers/upload_passages_router');
 const cancel_debts = require('./routers/cancel_debts_router');
+const get_figures= require('./routers/get_figures_router');
 
 
 
@@ -18,6 +19,7 @@ const cancel_debts = require('./routers/cancel_debts_router');
 app.use('/api/passing_toll', passing_toll_routes);
 app.use('/api/upload_passages', upload_passages_routes);
 app.use('/api/cancel_debts', cancel_debts);
+app.use('/api/get_debts_optimization', get_figures)
 // Root route
 app.get('/', (req, res) => {
     res.send('Simple root-route');

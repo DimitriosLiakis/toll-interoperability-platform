@@ -1,55 +1,62 @@
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const DbService = require('../dbService.js'); // Database service
 const util = require('util');
 
 // Promisify the exec function for easier use with async/await
 const execPromise = util.promisify(exec);
 
 const cancel_debts = async (req, res) => {
+    console.log("We are in the controller");
 
     const scriptDir = path.join(__dirname, '../scripts');
-    const script_name = 'cancelling_algo.py';
-    const python_path = path.join(scriptDir, script_name);
+    const scriptName = 'cancelling_algo.py';
+    const pythonPath = path.join(scriptDir, scriptName);
 
-    // Escape special characters in the path (optional, for safety)
-    const python_escaped = python_path.replace(/(["\s'$`\\])/g, '\\$1');
+    // Target directory for moving .png files
+    const uploadDir = path.join(__dirname, '../debt_figures');
 
-    // Path to the debt figures directory
-    const debtFiguresDir = path.join(__dirname, '../debt_figures');
-
-    // Use the DbService to access the database
-    const dbService = DbService.getDbServiceInstance();
     try {
-        // Run the Python script
-        console.log('Running Python script...');
-        const { stdout, stderr } = await execPromise(
-            `python3 "${python_escaped}" "${escapedFilePath}"`
-        );
-
-        console.log('Python script executed successfully.');
-
-        // Get all .png files in the debt_figures directory
-        const pngFiles = fs.readdirSync(debtFiguresDir).filter(file => file.endsWith('.png'));
-
-        // Ensure that there are exactly 2 .png files
-        if (pngFiles.length !== 2) {
-            throw new Error('Expected 2 .png files in the debt_figures directory');
+        // Ensure the upload directory exists
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
         }
 
-        // Get the full paths for the .png files
-        const filePaths = pngFiles.map(file => path.join(debtFiguresDir, file));
+        // Run the Python script
+        console.log('Running Python script...');
+        const { stdout } = await execPromise(`python3 "${pythonPath}"`);
 
-        // Respond with the success message and inserted records
+        // Parse the file paths output from the Python script
+        const filePaths = stdout.trim().split('\n');
+
+        console.log("The filepaths of the figures are:", filePaths);
+
+        // Move the .png files to the uploads directory
+        const movedFiles = [];
+        filePaths.forEach((file) => {
+            const oldPath = path.resolve(file.trim());
+            const newPath = path.join(uploadDir, path.basename(file.trim()));
+
+            if (fs.existsSync(oldPath)) {
+                fs.renameSync(oldPath, newPath);
+                movedFiles.push(newPath);
+                console.log(`Moved file: ${oldPath} -> ${newPath}`);
+            } else {
+                console.warn(`File not found: ${oldPath}`);
+            }
+        });
+
+        // Respond with success
         res.json({
-            message: stdout.trim(),
-            filePaths: filePaths, // Include the paths of the .png files
+            message: "The .png files have been processed and moved to the uploads directory.",
+            files: movedFiles,
         });
     } catch (error) {
-        // Handle errors in running the Python script or fetching records
-        console.error('Error:', error.message || error.stderr || 'Unknown error.');
-        res.status(500).json({ error: error.message || 'An unexpected error occurred.' });
+        // Handle errors during the Python script execution
+        console.error('An error occurred:', error.message || 'Unknown error.');
+        res.status(500).json({
+            error: error.message || 'An unexpected error occurred.',
+        });
     }
 };
 
