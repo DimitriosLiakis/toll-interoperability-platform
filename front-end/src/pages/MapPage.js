@@ -1,26 +1,38 @@
-// Map.js
 import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "axios";
+import "./MapPage.css";
 
 function Map() {
   const mapRef = useRef(null);
-  const [coordinates, setCoordinates] = useState([]);
-  const [filters, setFilters] = useState({ category: '', name: '' });
+  const markersRef = useRef(null);
+  const [tolls, setTolls] = useState([]);
+  const [filters, setFilters] = useState({ operator: "", name: "" });
 
-  // Αρχικοποίηση του χάρτη
+  const customIcon = L.icon({
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+
   useEffect(() => {
     if (mapRef.current === null) {
-      mapRef.current = L.map("map").setView([38.246639, 21.734573], 8);
+      // Initialize the map with default controls disabled
+      mapRef.current = L.map("map", {
+        zoomControl: false, // Disable zoom control
+        attributionControl: false, // Disable attribution control
+      }).setView([38.246639, 21.734573], 8);
 
+      // Add the tile layer without attribution since attributionControl is false
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        // No attribution here
       }).addTo(mapRef.current);
+
+      markersRef.current = L.layerGroup().addTo(mapRef.current);
     }
 
-    // Cleanup
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
@@ -30,39 +42,60 @@ function Map() {
   }, []);
 
   useEffect(() => {
-    const fetchCoordinates = async () => {
+    const fetchTolls = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/coordinates', {
-          params: filters,
-        });
-        setCoordinates(response.data);
+        const response = await axios.get("http://localhost:5000/api/tolls");
+        setTolls(response.data);
       } catch (error) {
-        console.error("Error fetching coordinates:", error);
+        console.error("Error fetching tolls:", error);
       }
     };
 
-    fetchCoordinates();
-  }, [filters]);
+    fetchTolls();
+  }, []);
+
+  const filteredTolls = tolls.filter((toll) => {
+    const matchesOperator = filters.operator
+      ? toll.operator.toLowerCase().includes(filters.operator.toLowerCase())
+      : true;
+    const matchesName = filters.name
+      ? toll.name.toLowerCase().includes(filters.name.toLowerCase())
+      : true;
+    return matchesOperator && matchesName;
+  });
 
   useEffect(() => {
-    if (mapRef.current) {
-      mapRef.current.eachLayer(layer => {
-        if (layer instanceof L.Marker) {
-          mapRef.current.removeLayer(layer);
-        }
-      });
+    if (mapRef.current && markersRef.current) {
+      markersRef.current.clearLayers();
 
-      coordinates.forEach(coord => {
-        L.marker([coord.lat, coord.lng])
-          .addTo(mapRef.current)
-          .bindPopup(coord.name);
+      filteredTolls.forEach((toll) => {
+        const marker = L.marker([toll.latitude, toll.longitude], { icon: customIcon })
+          .bindPopup(
+            `
+              <div class="popup-content">
+                <button class="close-button" onclick="this.parentElement.parentElement.style.display='none';">×</button>
+                <strong>${toll.name}</strong>
+                <span>Operator:</span> ${toll.operator}<br/>
+                <span>Email:</span> <a href="mailto:${toll.email}">${toll.email}</a><br/>
+                <span>Prices:</span> ${toll.prices.join(", ")}
+              </div>
+            `,
+            {
+              maxWidth: 400, // Increased width for better readability
+              autoPan: true,
+              closeButton: false, // Disable default close button
+              keepInView: true,
+            }
+          );
+
+        markersRef.current.addLayer(marker);
       });
     }
-  }, [coordinates]);
+  }, [filteredTolls]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prevFilters => ({
+    setFilters((prevFilters) => ({
       ...prevFilters,
       [name]: value,
     }));
@@ -73,13 +106,15 @@ function Map() {
       <div style={{ marginBottom: "20px" }}>
         <h3>Φίλτρα</h3>
         <label>
-          Κατηγορία:
-          <select name="category" value={filters.category} onChange={handleFilterChange}>
-            <option value="">Όλες</option>
-            <option value="city">Πόλη</option>
-            <option value="capital">Πρωτεύουσα</option>
-            
-          </select>
+          Εταιρεία:
+          <input
+            type="text"
+            name="operator"
+            value={filters.operator}
+            onChange={handleFilterChange}
+            placeholder="Εταιρεία..."
+            style={{ marginLeft: "10px" }}
+          />
         </label>
         <label style={{ marginLeft: "20px" }}>
           Όνομα:
@@ -89,6 +124,7 @@ function Map() {
             value={filters.name}
             onChange={handleFilterChange}
             placeholder="Αναζήτηση..."
+            style={{ marginLeft: "10px" }}
           />
         </label>
       </div>
