@@ -54,6 +54,18 @@ class DbService {
             throw error;
         }
     }
+    async getRecordsBetweenDate(tollStationID, dateFrom, dateTo) {
+        try {
+            const query = `
+                SELECT passage_id, timestamp, tollID, tagRef, tagHomeID, charge
+                FROM Passages
+                WHERE tollID = ? AND DATE(timestamp) BETWEEN ? AND ?`;
+            const [rows] = await promisePool.query(query, [tollStationID, dateFrom, dateTo]);
+            return rows;
+        } catch (error) {
+            console.error('Error in getRecordsBetweenDate:', error.message);
+            throw error;
+        }
+    }
 }
-
 module.exports = DbService;
