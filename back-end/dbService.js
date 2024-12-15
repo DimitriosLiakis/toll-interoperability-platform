@@ -67,5 +67,24 @@ class DbService {
             throw error;
         }
     }
+
+    async getPassesBetween2companies(tollOpID, tagOpID, dateFrom, dateTo) {
+        try {
+            const query = `
+                SELECT 
+                    COUNT(*) AS nPasses,
+                    COALESCE(SUM(amount), 0) AS passesCost
+                FROM Debt
+                WHERE creditor_company_id = ? 
+                  AND debtor_company_id = ? 
+                  AND DATE(timestamp) BETWEEN ? AND ?;
+            `;
+            const [rows] = await promisePool.query(query, [tollOpID, tagOpID, dateFrom, dateTo]);
+            return rows[0];
+        } catch(error) {
+            console.error('Error in getPassesBetween2companies:', error.message);
+            throw error;
+        }
+    }
 }
 module.exports = DbService;
