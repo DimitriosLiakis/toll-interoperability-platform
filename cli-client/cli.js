@@ -50,7 +50,6 @@ const loadUsers = () => {
     }
 };
 
-// Scope: login
 program
   .command('login')
   .description('Log in as a user')
@@ -59,22 +58,16 @@ program
   .action(async (options) => {
     const { username, passw } = options;
 
-    // Load users from the file
-    const users = loadUsers();
-
-    // Check if user exists in the file
-    const user = users.find(u => u.username === username && u.password === passw);
-
-    if (!user) {
-      console.error('Error: Invalid username or password.');
+    // Check if a user is already logged in
+    if (fs.existsSync(tokenPath)) {
+      const tokenData = JSON.parse(fs.readFileSync(tokenPath, 'utf8'));
+      console.error(`You are already logged in as '${tokenData.username}'. Please logout before logging in as a new user.`);
       process.exit(1);
     }
 
-     // Create a session token
-     const tokenData = { token: `${username}-token`, username, company: user.company || 'admin', role: user.role || 'user' };
+    // Simulate login logic (you can add your real API call here)
+    const tokenData = { token: `${username}-token`, username, company: 'moreas', role: 'user' };
 
-
-    // Write the token to the token file
     fs.writeFileSync(tokenPath, JSON.stringify(tokenData, null, 2));
     console.log(`Logged in successfully as ${username}. Token saved.`);
   });
@@ -101,46 +94,63 @@ const getCurrentUser = () => {
     return tokenData;
   };
 
-  // Scope: admin (subcommands)
-program
+ // **Admin Command**
+const adminCommand = program
 .command('admin')
-.description('Admin operations')
-.option('--usermod', 'Modify or create a user')
-.option('--username <username>', 'Username for --usermod')
-.option('--passw <password>', 'Password for --usermod')
-.option('--users', 'List users')
-.option('--addpasses', 'Add new passes from CSV file')
-.option('--source <source>', 'Source CSV file for --addpasses')
+.description('Admin operations');
+
+// **Admin Subcommand: usermod**
+adminCommand
+.command('usermod')
+.description('Create or modify a user')
+.requiredOption('--username <username>', 'Username for the new user')
+.requiredOption('--passw <password>', 'Password for the new user')
 .action(async (options) => {
-  if (options.usermod) {
-    const { username, passw } = options;
-    if (!username || !passw) {
-      console.error('Error: --username and --passw are required for --usermod');
-      process.exit(1);
-    }
+  const { username, passw } = options;
 
-    const result = await callApi('/admin/usermod', 'POST', { username, password: passw });
-    console.log(result);
+  // Example API call for usermod
+  const currentUser = getCurrentUser();
+  const headers = { Authorization: `Bearer ${currentUser.token}` };
+
+  const data = { username, password: passw };
+
+  const result = await callApi('/admin/usermod', 'POST', data, headers);
+  console.log(`User ${username} created or updated successfully.`);
+});
+
+// **Admin Subcommand: users**
+adminCommand
+.command('users')
+.description('List all users')
+.action(async () => {
+  const currentUser = getCurrentUser();
+  const headers = { Authorization: `Bearer ${currentUser.token}` };
+
+  const result = await callApi('/admin/users', 'GET', null, headers);
+  console.log('List of users:');
+  console.log(result);
+});
+
+// **Admin Subcommand: addpasses**
+adminCommand
+.command('addpasses')
+.description('Add new passes from a CSV file')
+.requiredOption('--source <source>', 'Source CSV file for new passes')
+.action(async (options) => {
+  const { source } = options;
+
+  if (!fs.existsSync(source)) {
+    console.error(`Error: File ${source} does not exist.`);
+    process.exit(1);
   }
 
-  if (options.users) {
-    const result = await callApi('/admin/users');
-    console.log(result);
-  }
+  const currentUser = getCurrentUser();
+  const headers = { Authorization: `Bearer ${currentUser.token}` };
 
-  if (options.addpasses) {
-    const { source } = options;
-    if (!source) {
-      console.error('Error: --source is required for --addpasses');
-      process.exit(1);
-    }
+  const csvData = fs.readFileSync(source, 'utf8');
 
-    const filePath = path.resolve(__dirname, source);
-    const fileData = fs.readFileSync(filePath, 'utf8');
-
-    const result = await callApi('/admin/addpasses', 'POST', { csvData: fileData });
-    console.log(result);
-  }
+  const result = await callApi('/admin/addpasses', 'POST', { csv: csvData }, headers);
+  console.log(`Passes from ${source} uploaded successfully.`);
 });
 
 // Scope: healthcheck
