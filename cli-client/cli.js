@@ -92,6 +92,56 @@ program
     }
   });
 
+const getCurrentUser = () => {
+    if (!fs.existsSync(tokenPath)) {
+      console.error('Error: You must be logged in to perform this action.');
+      process.exit(1);
+    }
+    const tokenData = JSON.parse(fs.readFileSync(tokenPath, 'utf8'));
+    return tokenData;
+  };
+
+  // Scope: admin (subcommands)
+program
+.command('admin')
+.description('Admin operations')
+.option('--usermod', 'Modify or create a user')
+.option('--username <username>', 'Username for --usermod')
+.option('--passw <password>', 'Password for --usermod')
+.option('--users', 'List users')
+.option('--addpasses', 'Add new passes from CSV file')
+.option('--source <source>', 'Source CSV file for --addpasses')
+.action(async (options) => {
+  if (options.usermod) {
+    const { username, passw } = options;
+    if (!username || !passw) {
+      console.error('Error: --username and --passw are required for --usermod');
+      process.exit(1);
+    }
+
+    const result = await callApi('/admin/usermod', 'POST', { username, password: passw });
+    console.log(result);
+  }
+
+  if (options.users) {
+    const result = await callApi('/admin/users');
+    console.log(result);
+  }
+
+  if (options.addpasses) {
+    const { source } = options;
+    if (!source) {
+      console.error('Error: --source is required for --addpasses');
+      process.exit(1);
+    }
+
+    const filePath = path.resolve(__dirname, source);
+    const fileData = fs.readFileSync(filePath, 'utf8');
+
+    const result = await callApi('/admin/addpasses', 'POST', { csvData: fileData });
+    console.log(result);
+  }
+});
 
 // Scope: healthcheck
 program
@@ -210,48 +260,6 @@ program
     const headers = { Authorization: `Bearer ${currentUser.token}` };
     const result = await callApi(`/chargesBy?opid=${opid}&from=${from}&to=${to}`, 'GET', null, headers);
     console.log(result);
-  });
-
-// Scope: admin (subcommands)
-program
-  .command('admin')
-  .description('Admin operations')
-  .option('--usermod', 'Modify or create a user')
-  .option('--username <username>', 'Username for --usermod')
-  .option('--passw <password>', 'Password for --usermod')
-  .option('--users', 'List users')
-  .option('--addpasses', 'Add new passes from CSV file')
-  .option('--source <source>', 'Source CSV file for --addpasses')
-  .action(async (options) => {
-    if (options.usermod) {
-      const { username, passw } = options;
-      if (!username || !passw) {
-        console.error('Error: --username and --passw are required for --usermod');
-        process.exit(1);
-      }
-
-      const result = await callApi('/admin/usermod', 'POST', { username, password: passw });
-      console.log(result);
-    }
-
-    if (options.users) {
-      const result = await callApi('/admin/users');
-      console.log(result);
-    }
-
-    if (options.addpasses) {
-      const { source } = options;
-      if (!source) {
-        console.error('Error: --source is required for --addpasses');
-        process.exit(1);
-      }
-
-      const filePath = path.resolve(__dirname, source);
-      const fileData = fs.readFileSync(filePath, 'utf8');
-
-      const result = await callApi('/admin/addpasses', 'POST', { csvData: fileData });
-      console.log(result);
-    }
   });
 
 // Parse arguments
