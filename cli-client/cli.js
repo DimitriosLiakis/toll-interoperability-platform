@@ -15,6 +15,10 @@ program
 
 const BASE_URL = 'http://localhost:9115/api/'; // May need some changes
 
+// Path to user storage and token file
+const usersPath = path.resolve(__dirname, 'users.json');
+const tokenPath = path.resolve(__dirname, 'token.json');
+
 // Helper function to call REST API
 const callApi = async (endpoint, method = 'GET', data = null, headers = {}) => {
   try {
@@ -30,6 +34,63 @@ const callApi = async (endpoint, method = 'GET', data = null, headers = {}) => {
     process.exit(1);
   }
 };
+
+// Helper function to read users from users.json
+const loadUsers = () => {
+    if (!fs.existsSync(usersPath)) {
+      console.error('Error: users.json not found. Please create it with a list of users.');
+      process.exit(1);
+    }
+    const usersData = fs.readFileSync(usersPath, 'utf8');
+    try {
+      return JSON.parse(usersData);
+    } catch (error) {
+      console.error('Error parsing users.json:', error.message);
+      process.exit(1);
+    }
+};
+
+// Scope: login
+program
+  .command('login')
+  .description('Log in as a user')
+  .requiredOption('--username <username>', 'Username')
+  .requiredOption('--passw <password>', 'Password')
+  .action(async (options) => {
+    const { username, passw } = options;
+
+    // Load users from the file
+    const users = loadUsers();
+
+    // Check if user exists in the file
+    const user = users.find(u => u.username === username && u.password === passw);
+
+    if (!user) {
+      console.error('Error: Invalid username or password.');
+      process.exit(1);
+    }
+
+    // Create a simple token for this session
+    const tokenData = { token: `${username}-token`, username };
+
+    // Write the token to the token file
+    fs.writeFileSync(tokenPath, JSON.stringify(tokenData, null, 2));
+    console.log(`Logged in successfully as ${username}. Token saved.`);
+  });
+
+// Scope: logout
+program
+  .command('logout')
+  .description('Log out the current user')
+  .action(() => {
+    if (fs.existsSync(tokenPath)) {
+      fs.unlinkSync(tokenPath);
+      console.log('Logged out successfully.');
+    } else {
+      console.log('No user is currently logged in.');
+    }
+  });
+
 
 // Scope: healthcheck
 program
@@ -56,37 +117,6 @@ program
   .action(async () => {
     const result = await callApi('/admin/resetstations', 'POST');
     console.log(result);
-  });
-
-// Scope: login
-program
-  .command('login')
-  .description('Log in as a user')
-  .requiredOption('--username <username>', 'Username')
-  .requiredOption('--passw <password>', 'Password')
-  .action(async (options) => {
-    const { username, passw } = options;
-    const result = await callApi('/login', 'POST', { username, password: passw });
-    console.log(result);
-
-    // Save token to a local file for future requests
-    const tokenPath = path.resolve(__dirname, 'token.json');
-    fs.writeFileSync(tokenPath, JSON.stringify({ token: result.token }, null, 2));
-    console.log('Logged in successfully. Token saved.');
-  });
-
-// Scope: logout
-program
-  .command('logout')
-  .description('Log out the current user')
-  .action(() => {
-    const tokenPath = path.resolve(__dirname, 'token.json');
-    if (fs.existsSync(tokenPath)) {
-      fs.unlinkSync(tokenPath);
-      console.log('Logged out successfully.');
-    } else {
-      console.log('No user is currently logged in.');
-    }
   });
 
 // Scope: tollstationpasses
@@ -121,7 +151,91 @@ program
     }
   });
 
-// Additional scopes like passanalysis, passescost, chargesby, admin will follow a similar structure
+// Scope: passanalysis
+program
+  .command('passanalysis')
+  .description('Retrieve pass analysis data')
+  .requiredOption('--stationop <stationop>', 'Station Operator')
+  .requiredOption('--tagop <tagop>', 'Tag Operator')
+  .requiredOption('--from <from>', 'Start date (YYYYMMDD)')
+  .requiredOption('--to <to>', 'End date (YYYYMMDD)')
+  .action(async (options) => {
+    const { stationop, tagop, from, to } = options;
+
+    const result = await callApi(`/passAnalysis?stationop=${stationop}&tagop=${tagop}&from=${from}&to=${to}`);
+    console.log(result);
+  });
+
+// Scope: passescost
+program
+  .command('passescost')
+  .description('Retrieve pass cost data')
+  .requiredOption('--stationop <stationop>', 'Station Operator')
+  .requiredOption('--tagop <tagop>', 'Tag Operator')
+  .requiredOption('--from <from>', 'Start date (YYYYMMDD)')
+  .requiredOption('--to <to>', 'End date (YYYYMMDD)')
+  .action(async (options) => {
+    const { stationop, tagop, from, to } = options;
+
+    const result = await callApi(`/passesCost?stationop=${stationop}&tagop=${tagop}&from=${from}&to=${to}`);
+    console.log(result);
+  });
+
+// Scope: chargesby
+program
+  .command('chargesby')
+  .description('Retrieve charges data by operator')
+  .requiredOption('--opid <opid>', 'Operator ID')
+  .requiredOption('--from <from>', 'Start date (YYYYMMDD)')
+  .requiredOption('--to <to>', 'End date (YYYYMMDD)')
+  .action(async (options) => {
+    const { opid, from, to } = options;
+
+    const result = await callApi(`/chargesBy?opid=${opid}&from=${from}&to=${to}`);
+    console.log(result);
+  });
+
+// Scope: admin (subcommands)
+program
+  .command('admin')
+  .description('Admin operations')
+  .option('--usermod', 'Modify or create a user')
+  .option('--username <username>', 'Username for --usermod')
+  .option('--passw <password>', 'Password for --usermod')
+  .option('--users', 'List users')
+  .option('--addpasses', 'Add new passes from CSV file')
+  .option('--source <source>', 'Source CSV file for --addpasses')
+  .action(async (options) => {
+    if (options.usermod) {
+      const { username, passw } = options;
+      if (!username || !passw) {
+        console.error('Error: --username and --passw are required for --usermod');
+        process.exit(1);
+      }
+
+      const result = await callApi('/admin/usermod', 'POST', { username, password: passw });
+      console.log(result);
+    }
+
+    if (options.users) {
+      const result = await callApi('/admin/users');
+      console.log(result);
+    }
+
+    if (options.addpasses) {
+      const { source } = options;
+      if (!source) {
+        console.error('Error: --source is required for --addpasses');
+        process.exit(1);
+      }
+
+      const filePath = path.resolve(__dirname, source);
+      const fileData = fs.readFileSync(filePath, 'utf8');
+
+      const result = await callApi('/admin/addpasses', 'POST', { csvData: fileData });
+      console.log(result);
+    }
+  });
 
 // Parse arguments
 program.parse(process.argv);
