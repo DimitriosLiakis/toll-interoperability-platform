@@ -262,5 +262,26 @@ program
     console.log(result);
   });
 
+program
+  .command('whoami')
+  .description('Show the current logged-in user')
+  .action(() => {
+    if (!fs.existsSync(tokenPath)) {
+      console.error('Error: You are not logged in.');
+      process.exit(1);
+    }
+
+    const tokenData = JSON.parse(fs.readFileSync(tokenPath, 'utf8'));
+
+    // Determine what to show for admin and non-admin users
+    const companyInfo = tokenData.role === 'admin' ? '' : `Company: ${tokenData.company ? tokenData.company : 'N/A'}\n`;
+
+    console.log(`
+      You are logged in as:
+      ----------------------
+      Username: ${tokenData.username}
+      ${companyInfo}Role: ${tokenData.role ? tokenData.role : 'user'}
+    `);
+  });
 // Parse arguments
 program.parse(process.argv);
