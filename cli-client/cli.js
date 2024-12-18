@@ -70,8 +70,9 @@ program
       process.exit(1);
     }
 
-    // Create a simple token for this session
-    const tokenData = { token: `${username}-token`, username };
+     // Create a session token
+     const tokenData = { token: `${username}-token`, username, company: user.company || 'admin', role: user.role || 'user' };
+
 
     // Write the token to the token file
     fs.writeFileSync(tokenPath, JSON.stringify(tokenData, null, 2));
@@ -119,7 +120,7 @@ program
     console.log(result);
   });
 
-// Scope: tollstationpasses
+// Scope: tollstationpasses (restricted by company)
 program
   .command('tollstationpasses')
   .description('Retrieve toll station passes')
@@ -129,29 +130,24 @@ program
   .option('--format <format>', 'Response format (json/csv)', 'csv')
   .action(async (options) => {
     const { station, from, to, format } = options;
-    const tokenPath = path.resolve(__dirname, 'token.json');
+    const currentUser = getCurrentUser();
 
-    let headers = {};
-    if (fs.existsSync(tokenPath)) {
-      const { token } = JSON.parse(fs.readFileSync(tokenPath));
-      headers.Authorization = `Bearer ${token}`;
+    if (currentUser.role !== 'admin' && currentUser.company !== station) {
+      console.error(`Error: You can only access toll station data for your company: '${currentUser.company}'.`);
+      process.exit(1);
     }
 
-    const result = await callApi(
-      `/tollStationPasses?station=${station}&from=${from}&to=${to}&format=${format}`,
-      'GET',
-      null,
-      headers
-    );
+    const headers = { Authorization: `Bearer ${currentUser.token}` };
+    const result = await callApi(`/tollStationPasses?station=${station}&from=${from}&to=${to}&format=${format}`, 'GET', null, headers);
 
     if (format === 'json') {
       console.log(JSON.stringify(result, null, 2));
     } else {
-      console.log(result); // Assume CSV string returned
+      console.log(result);
     }
   });
 
-// Scope: passanalysis
+// Scope: passanalysis (restricted by company)
 program
   .command('passanalysis')
   .description('Retrieve pass analysis data')
@@ -161,12 +157,19 @@ program
   .requiredOption('--to <to>', 'End date (YYYYMMDD)')
   .action(async (options) => {
     const { stationop, tagop, from, to } = options;
+    const currentUser = getCurrentUser();
 
-    const result = await callApi(`/passAnalysis?stationop=${stationop}&tagop=${tagop}&from=${from}&to=${to}`);
+    if (currentUser.role !== 'admin' && currentUser.company !== stationop) {
+      console.error(`Error: You can only access pass analysis data for your company: '${currentUser.company}'.`);
+      process.exit(1);
+    }
+
+    const headers = { Authorization: `Bearer ${currentUser.token}` };
+    const result = await callApi(`/passAnalysis?stationop=${stationop}&tagop=${tagop}&from=${from}&to=${to}`, 'GET', null, headers);
     console.log(result);
   });
 
-// Scope: passescost
+// Scope: passescost (restricted by company)
 program
   .command('passescost')
   .description('Retrieve pass cost data')
@@ -176,12 +179,19 @@ program
   .requiredOption('--to <to>', 'End date (YYYYMMDD)')
   .action(async (options) => {
     const { stationop, tagop, from, to } = options;
+    const currentUser = getCurrentUser();
 
-    const result = await callApi(`/passesCost?stationop=${stationop}&tagop=${tagop}&from=${from}&to=${to}`);
+    if (currentUser.role !== 'admin' && currentUser.company !== stationop) {
+      console.error(`Error: You can only access pass cost data for your company: '${currentUser.company}'.`);
+      process.exit(1);
+    }
+
+    const headers = { Authorization: `Bearer ${currentUser.token}` };
+    const result = await callApi(`/passesCost?stationop=${stationop}&tagop=${tagop}&from=${from}&to=${to}`, 'GET', null, headers);
     console.log(result);
   });
 
-// Scope: chargesby
+// Scope: chargesby (restricted by company)
 program
   .command('chargesby')
   .description('Retrieve charges data by operator')
@@ -190,8 +200,15 @@ program
   .requiredOption('--to <to>', 'End date (YYYYMMDD)')
   .action(async (options) => {
     const { opid, from, to } = options;
+    const currentUser = getCurrentUser();
 
-    const result = await callApi(`/chargesBy?opid=${opid}&from=${from}&to=${to}`);
+    if (currentUser.role !== 'admin' && currentUser.company !== opid) {
+      console.error(`Error: You can only access charge data for your company: '${currentUser.company}'.`);
+      process.exit(1);
+    }
+
+    const headers = { Authorization: `Bearer ${currentUser.token}` };
+    const result = await callApi(`/chargesBy?opid=${opid}&from=${from}&to=${to}`, 'GET', null, headers);
     console.log(result);
   });
 

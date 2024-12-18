@@ -1,5 +1,10 @@
 [
-    { "username": "user1", "password": "password1" },
-    { "username": "user2", "password": "password2" },
-    { "username": "admin", "password": "admin123" }
+    { "username": "admin", "password": "password_admin", "role": "admin" },
+    { "username": "aegean_user", "password": "password_aegean", "company": "aegean_motorway" },
+    { "username": "egnatia_user", "password": "password_egnatia", "company": "egnatia_odos" },
+    { "username": "kentriki_user", "password": "password_kentriki", "company": "kentriki_odos" },
+    { "username": "moreas_user", "password": "password_moreas", "company": "moreas" },
+    { "username": "attiki_user", "password": "password_attiki", "company": "attiki_odos" },
+    { "username": "nea_user", "password": "password_nea", "company": "nea_odos" },
+    { "username": "olympia_user", "password": "password_olympia", "company": "olympia_odos" }
 ]
