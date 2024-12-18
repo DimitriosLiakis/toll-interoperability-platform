@@ -16,12 +16,10 @@ const getTollStationPasses = async (req, res, next) => {
             return res.status(204).send(); // Αν λείπει οποιαδήποτε παράμετρος, επιστρέφουμε 204 No Content
         }
 
-        // Έλεγχος για έγκυρο φορμάτ ημερομηνιών (YYYYMMDD)
         if (!/^\d{8}$/.test(date_from) || !/^\d{8}$/.test(date_to)) {
             return res.status(204).send(); // Αν το φορμάτ είναι λανθασμένο, επιστρέφουμε 204 No Content
         }
 
-        // Μετατροπή ημερομηνιών σε μορφή "YYYY-MM-DD"
         const formattedDateFrom = `${date_from.slice(0, 4)}-${date_from.slice(4, 6)}-${date_from.slice(6, 8)}`;
         const formattedDateTo = `${date_to.slice(0, 4)}-${date_to.slice(4, 6)}-${date_to.slice(6, 8)}`;
 
@@ -54,9 +52,8 @@ const getTollStationPasses = async (req, res, next) => {
             })),
         };
 
-        // Επιστροφή σε μορφή JSON ή CSV ανάλογα με την παράμετρο format
         if (format === 'csv') {
-            const csv = json2csv(response.passList); // Μετατροπή του passList σε CSV
+            const csv = json2csv(response.passList); 
             res.header('Content-Type', 'text/csv'); // Ορισμός τύπου περιεχομένου
             res.attachment('toll_passes.csv'); // Προαιρετικά, προσδιορισμός του ονόματος του αρχείου
             return res.send(csv); // Επιστροφή του CSV
