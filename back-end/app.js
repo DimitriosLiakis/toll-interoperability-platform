@@ -14,6 +14,7 @@ const cancel_debts = require('./routers/cancel_debts_router');
 const get_figures= require('./routers/get_figures_router');
 const tollStationRouter = require('./routers/tollStationsPasses_router');
 const passesCost = require('./routers/passesCost_router');
+const chargesBy = require('./routes/chargesBy_router');
 
 
 // Use the routes
@@ -23,6 +24,7 @@ app.use('/api/cancel_debts', cancel_debts);
 app.use('/api/get_debts_optimization', get_figures)
 app.use('/api/tollStationPasses', tollStationRouter)
 app.use('/api/passesCost', passesCost)
+app.use('/api/chargesBy', chargesBy);
 
 // Root route
 app.get('/', (req, res) => {
