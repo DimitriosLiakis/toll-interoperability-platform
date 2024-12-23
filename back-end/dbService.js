@@ -86,5 +86,23 @@ class DbService {
             throw error;
         }
     }
+
+    async getDebtBetween2companies(tollOpID, tagOpID, dateFrom, dateTo) {
+        try {
+            const query = `
+            SELECT debtor_company_id, count(*) AS nPasses, COALESCE(SUM(amount), 0) AS passesCost
+            FROM Debt
+            WHERE creditor_company_id = ? 
+            AND debtor_company_id = ? 
+            AND DATE(timestamp) BETWEEN ? AND ?;
+            `;
+            const [rows]=await promisePool.query(query, [tollOpID, tagOpID, dateFrom, dateTo]);
+            return rows;
+        }
+        catch (error) {
+            console.error('Error in getDebtBetween2companies:', error.message);
+            throw error; 
+        }
+    }
 }
 module.exports = DbService;

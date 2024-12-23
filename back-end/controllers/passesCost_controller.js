@@ -38,7 +38,7 @@ const passesCost_controller = async (req, res, next) => {
             nPasses,
             passesCost: parseFloat(passesCost),
         };
-
+        console.log("The code is running as we expect")
         // Handle CSV format
         if (format === 'csv') {
             // Convert response to CSV using json2csv
