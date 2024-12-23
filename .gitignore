@@ -1,3 +1,2 @@
-*.env
-*.abcd
+.env
 node_modules/

@@ -104,5 +104,16 @@ class DbService {
             throw error; 
         }
     }
+
+    async getpassAnalysis(stationOpID, tollOpID, dateFrom, dateTo) {
+        try {
+            const query = ``;
+            const [rows] = await promisePool.query(query, [stationOpID, tollOpID, dateFrom, dateTo]);
+        }
+        catch (error) {
+            console.error('Error in getpassAnalysis:', error.message);
+            throw error; 
+        }
+    }
 }
 module.exports = DbService;

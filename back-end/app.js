@@ -16,6 +16,7 @@ const tollStationRouter = require('./routers/tollStationsPasses_router');
 const passesCost = require('./routers/passesCost_router');
 const tollRouter = require('./routers/tollRouter');
 const chargesBy = require('./routers/chargesBy_router');
+const passAnalysis = require('./routers/passAnalysis_router')
 
 
 // Use the routes
@@ -27,6 +28,7 @@ app.use('/api/tollStationPasses', tollStationRouter)
 app.use('/api/passesCost', passesCost)
 app.use('/api/chargesBy', chargesBy);
 app.use('/api', tollRouter);
+app.use('/api/passAnalysis', passAnalysis);
 
 // Root route
 app.get('/', (req, res) => {
