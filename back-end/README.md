@@ -1,111 +1,80 @@
-Back-End Application
+Back-End
 
-This is a back-end application built using Node.js and Express for managing routes, executing Python scripts, and interacting with a MySQL database.
-Table of Contents
+This project includes the back-end of the application, which is built with Node.js and Express to manage APIs and connect to a database.
+Contents
 
-    Requirements
-    Installation
-    Setup
-    Usage
-    Project Structure
-    Scripts
-    Dependencies
+    Node.js/Express Backend for API and request handling
+    MySQL and MySQL2 for database connection
+    CSV data formatting using libraries like csv-parser and json2csv
+    File uploads with express-fileupload and multer
+    Environment configuration with dotenv
+    Data validation with express-validator
 
 Requirements
 
-Before you begin, ensure you have the following installed:
+To run the application, make sure you have the following installed:
 
-    Node.js (v14 or higher)
-    npm (comes with Node.js)
-    MySQL
-    Python 3.x with the necessary modules (e.g., mysql-connector, networkx, matplotlib)
+    Node.js (at least v16.0.0)
+    npm or yarn for dependency management
 
 Installation
 
-Clone the repository and navigate to its root directory:
+    Clone the repository:
 
-git clone <repository-url>
-cd back-end
+    git clone https://github.com/username/repository-name.git
 
-Install dependencies:
+    Navigate to the project folder:
 
-npm install
+    cd repository-name
 
-Setup
+    Install the dependencies:
 
-    Environment Variables:
-    Create a .env file in the root directory and define the following environment variables:
+    npm install
+
+Environment Configuration
+
+Create a .env file in the root directory of the application and add the required environment variables, for example:
 
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=2002
-DB_NAME=draft_b
+DB_PASSWORD=password
+DB_NAME=database_name
+PORT=5000
 
-Database:
-Ensure your MySQL database is running, and the schema is set up according to the application's requirements. Import the required database schema into MySQL.
+Starting the Server
 
-Python Setup:
-Ensure the Python script dependencies are installed. Run the following command in the directory containing the cancelling_algo.py script:
-
-    pip install mysql-connector-python networkx matplotlib
-
-Usage
-
-    Run the Development Server:
-    Use nodemon for development:
+To start the server, use the following command, which runs the server.js file:
 
 npm start
 
-Alternatively, run without nodemon:
+This will start the Express server and make it available on the specified port (e.g., localhost:5000).
 
-    node index.js
+For running the app in development mode with automatic code refresh when you make changes, use:
 
-    Access the Server:
-    The application will start on http://localhost:5000.
-
-    Endpoints:
-        POST /api/passing_toll: Handle toll-related operations.
-        POST /api/upload_passages: Upload passage details.
-        PATCH /api/cancel_debts: Run the debt cancellation Python script and return results.
-        GET /api/get_debts_optimization: Retrieve debt optimization figures.
-
-Project Structure
-
-back-end/
-├── controllers/
-│   ├── cancel_debts_controller.js
-│   ├── passing_toll_controller.js
-│   ├── ...
-├── routers/
-│   ├── cancel_debts_router.js
-│   ├── passing_toll_router.js
-│   ├── ...
-├── scripts/
-│   ├── cancelling_algo.py
-├── debt_figures/    # Contains generated PNG files from Python scripts
-├── index.js         # Entry point of the app
-├── app.js           # App configuration and middleware
-├── package.json
-├── .env             # Environment variables
-└── README.md
-
+npm run dev
 Scripts
 
-The following npm scripts are defined in package.json:
+    To run the app in development mode (using nodemon for auto-reloading):
 
-    npm test: Placeholder for running tests.
-    npm start: Start the application using nodemon.
+    npm run dev
 
-Dependencies
-Main Dependencies:
+    To run the app in production mode:
 
-    express: Web framework for Node.js.
-    cors: Middleware for enabling CORS.
-    dotenv: Manage environment variables.
-    mysql: MySQL integration for Node.js.
-    mysql2: Improved MySQL client for Node.js.
-    multer: File upload middleware.
+    npm start
 
-Dev Dependencies:
+Tests
 
-    nodemon: Automatically restart the server during development.
+No tests are currently available for this project. When added, they can be run with the command:
+
+npm test
+Notes
+
+    This project uses the following libraries:
+        cors: For enabling CORS (Cross-Origin Resource Sharing).
+        express: For setting up the back-end server.
+        mysql and mysql2: For connecting to the MySQL database.
+        multer: For handling file uploads and storage.
+        express-validator: For data validation.
+        dotenv: For managing environment variables.
+        date-fns: For working with dates.
+        csv-parser and json2csv: For working with CSV files
