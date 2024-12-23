@@ -1,12 +1,12 @@
 const dotenv = require('dotenv');
-dotenv.config();  
+dotenv.config();
 
 const mysql = require('mysql2');
 
 // Create a connection pool instead of a single connection
 const pool = mysql.createPool({
     host: process.env.HOST,
-    user: process.env.DUSER, 
+    user: process.env.DUSER,
     password: process.env.PASSWORD,
     database: process.env.DATABASE,
     port: process.env.DB_PORT
@@ -81,7 +81,7 @@ class DbService {
             `;
             const [rows] = await promisePool.query(query, [tollOpID, tagOpID, dateFrom, dateTo]);
             return rows[0];
-        } catch(error) {
+        } catch (error) {
             console.error('Error in getPassesBetween2companies:', error.message);
             throw error;
         }
@@ -96,24 +96,44 @@ class DbService {
             AND debtor_company_id = ? 
             AND DATE(timestamp) BETWEEN ? AND ?;
             `;
-            const [rows]=await promisePool.query(query, [tollOpID, tagOpID, dateFrom, dateTo]);
+            const [rows] = await promisePool.query(query, [tollOpID, tagOpID, dateFrom, dateTo]);
             return rows;
         }
         catch (error) {
             console.error('Error in getDebtBetween2companies:', error.message);
-            throw error; 
+            throw error;
         }
     }
 
-    async getpassAnalysis(stationOpID, tollOpID, dateFrom, dateTo) {
+    async getpassAnalysis(stationOpID, tagOpID, dateFrom, dateTo) {
         try {
-            const query = ``;
-            const [rows] = await promisePool.query(query, [stationOpID, tollOpID, dateFrom, dateTo]);
-        }
-        catch (error) {
+            const query = `
+                SELECT 
+                    p.passage_id AS passID,
+                    p.tollID AS stationID,
+                    p.timestamp,
+                    p.tagRef AS tagID,
+                    p.charge AS passCharge,
+                    tl.Toll_id AS tollID
+                FROM 
+                    Passages p
+                JOIN 
+                    Transceiver t ON p.tagRef = t.tagRef
+                JOIN 
+                    Toll tl ON p.tollID = tl.Toll_id
+                WHERE 
+                    t.company_id = ?  -- Χρησιμοποιούμε το company_id από τον πίνακα Transceiver
+                    AND DATE(p.timestamp) BETWEEN ? AND ?
+            `;
+            // Εκτέλεση του query με τις παραμέτρους
+            const [rows] = await promisePool.query(query, [tagOpID, dateFrom, dateTo]);
+            return rows;
+        } catch (error) {
             console.error('Error in getpassAnalysis:', error.message);
-            throw error; 
+            throw error;
         }
     }
+    
+
 }
 module.exports = DbService;
