@@ -1,166 +1,85 @@
-/* MapPage.css */
+/* Leaflet CSS */
+@import "leaflet/dist/leaflet.css";
 
-/* Βασικές Ρυθμίσεις για το Σώμα της Σελίδας */
-body, html, #root {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-}
+/* MarkerCluster CSS */
+@import "leaflet.markercluster/dist/MarkerCluster.css";
+@import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
-/* Στυλ για το Περιέκτη του Χάρτη */
+/* Map Container */
 #map {
-    height: 500px;
-    width: 100%;
-    position: relative;
-    z-index: 1; /* Βεβαιωθείτε ότι ο χάρτης είναι πίσω από τα popups */
+  height: 500px;
+  width: 100%;
 }
 
-/* Στυλ για τα Φίλτρα */
-.filter-container {
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: #f8f9fa;
-    border-radius: 5px;
+/* Reset all popup defaults */
+.leaflet-popup,
+.leaflet-popup-content-wrapper,
+.leaflet-popup-content {
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-.filter-container h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
+/* Hide default close button */
+.leaflet-popup-close-button {
+  display: none !important;
 }
 
-.filter-container label {
-    display: inline-block;
-    margin-right: 20px;
-    font-weight: bold;
+/* Hide popup tip */
+.leaflet-popup-tip-container {
+  display: none !important;
 }
 
-.filter-container input {
-    padding: 5px;
-    margin-left: 10px;
-    border: 1px solid #ced4da;
-    border-radius: 3px;
-    font-size: 14px;
-}
-
-/* Popup Content Styling */
+/* Custom popup styling */
 .popup-content {
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    line-height: 1.6; /* Αυξημένη γραμμογράφηση για καλύτερη αναγνωσιμότητα */
-    width: 400px; /* Μεγαλύτερο πλάτος */
-    max-width: 500px; /* Επαρκές πλάτος για αναγνωσιμότητα */
-    height: auto; /* Αυτόματο ύψος ανάλογα με το περιεχόμενο */
-    white-space: normal; /* Επιτρέπει σπάσιμο γραμμών */
-    overflow-wrap: break-word; /* Διασφαλίζει ότι μεγάλα λόγια θα σπάνε */
-    padding: 10px; /* Προσθέτουμε padding για καλύτερη εμφάνιση */
-    border-radius: 5px; /* Στρογγυλεμένες γωνίες */
-    background: #fff; /* Λευκό φόντο */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Προσθέτουμε σκιά */
-    position: relative; /* Απαραίτητο για την τοποθέτηση του κουμπιού κλεισίματος */
-    box-sizing: border-box; /* Συμπερίληψη padding και border στο συνολικό πλάτος */
+  position: relative;
+  background-color: white;
+  border: 2px solid #0066cc;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  min-width: 250px;
+  max-width: 300px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
-/* Στυλ τίτλου */
+/* Custom close button */
+.popup-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+  color: #666;
+  cursor: pointer;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.popup-close:hover {
+  color: #333;
+}
+
 .popup-content strong {
-    font-size: 16px;
-    display: block;
-    margin-bottom: 8px; /* Απόσταση από το υπόλοιπο κείμενο */
-}
-
-/* Στυλ για τα υπόλοιπα στοιχεία */
-.popup-content span {
-    display: inline; /* Το περιεχόμενο παραμένει σε μία γραμμή */
-    color: gray;
-    margin-right: 10px; /* Απόσταση μεταξύ των στοιχείων */
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 4px;
 }
 
 .popup-content a {
-    text-decoration: none;
-    color: #007bff;
+  color: #0066cc;
+  text-decoration: none;
 }
 
 .popup-content a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
-
-/* Custom Close Button */
-.close-button {
-    position: absolute; /* Για τοποθέτηση στην πάνω δεξιά γωνία */
-    top: 5px;
-    right: 5px;
-    background: none;
-    border: none;
-    font-size: 16px; /* Μέγεθος κουμπιού */
-    font-weight: bold;
-    color: #333;
-    cursor: pointer;
-}
-
-.close-button:hover {
-    color: #ff0000; /* Κόκκινο χρώμα στο hover */
-}
-
-/* Leaflet Popup Overrides */
-.leaflet-popup {
-    z-index: 1000; /* Βεβαιωθείτε ότι η τιμή είναι αρκετά υψηλή για να εμφανίζεται πάνω από άλλα στοιχεία */
-}
-
-.leaflet-popup-content-wrapper {
-    border: none; /* Αφαιρέστε το προεπιλεγμένο περίγραμμα του Leaflet */
-    box-shadow: none; /* Αφαιρέστε την προεπιλεγμένη σκιά */
-}
-
-.leaflet-popup-content {
-    margin: 0; /* Αφαιρέστε τα προεπιλεγμένα margins */
-    padding: 0; /* Αφαιρέστε τα προεπιλεγμένα padding */
-}
-
-/* Responsive Προσαρμογές */
-@media (max-width: 768px) {
-    .popup-content {
-        width: 300px; /* Στενότερο για κινητά */
-        max-width: 300px;
-        font-size: 13px; /* Μικρότερη γραμματοσειρά */
-    }
-
-    #map {
-        height: 400px; /* Μικρότερο ύψος για κινητά */
-    }
-
-    .filter-container label {
-        display: block;
-        margin-bottom: 10px;
-    }
-
-    .filter-container input {
-        width: 100%;
-        margin-left: 0;
-        margin-top: 5px;
-    }
-}
-
-/* Επιπλέον Στυλ για Βελτιωμένη Εμφάνιση */
-.popup-content {
-    /* Προσθήκη scroll αν το περιεχόμενο υπερβαίνει το μέγιστο ύψος */
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-/* Προσαρμοσμένες Ρυθμίσεις για Άλλα Στοιχεία (Προαιρετικό) */
-body {
-    background-color: #f0f2f5;
-}
-
-h3 {
-    color: #333;
-}
-
-label {
-    color: #555;
-}
-
-input::placeholder {
-    color: #999;
-}
-
