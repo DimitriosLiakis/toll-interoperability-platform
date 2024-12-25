@@ -1,11 +1,15 @@
 const express = require('express');
 const cors = require('cors');
-
+const path = require('path');
 const app = express();
 
 // Middleware for parsing JSON
 app.use(cors());
 app.use(express.json()); // Allows the server to parse incoming JSON data
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/debt_figures', express.static(path.join(__dirname, 'debt_figures')));
+app.use('/static', express.static(path.join(__dirname, 'public')));
 
 // Import Routes
 const passing_toll_routes = require('./routers/passing_toll_router');
