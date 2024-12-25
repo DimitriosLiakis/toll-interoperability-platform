@@ -32,7 +32,7 @@ const StatsPage = () => {
   useEffect(() => {
     const fetchAndProcessData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/uploads/passages.csv', {
+        const response = await axios.get('http://localhost:9150/uploads/passages.csv', {
           responseType: 'blob', 
         });
         const csvText = await response.data.text();
