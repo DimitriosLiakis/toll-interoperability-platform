@@ -1,38 +1,70 @@
+// Map.js
 import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+import "leaflet.markercluster"; // Import the markercluster plugin
 import axios from "axios";
 import "./MapPage.css";
 
+// Fix for default icon issues in Leaflet when using with React
+import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
+import iconUrl from "leaflet/dist/images/marker-icon.png";
+import shadowUrl from "leaflet/dist/images/marker-shadow.png";
+
+// Set default icon (optional if you use custom icons)
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl,
+  iconUrl,
+  shadowUrl,
+});
+
 function Map() {
   const mapRef = useRef(null);
-  const markersRef = useRef(null);
+  const markersRef = useRef(null); // This will hold the MarkerClusterGroup
   const [tolls, setTolls] = useState([]);
-  const [filters, setFilters] = useState({ operator: "", name: "" });
+  const [filters, setFilters] = useState({ operator: "all", name: "" });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Define a custom icon with corrected anchor points
   const customIcon = L.icon({
-    iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
+    iconUrl:
+      "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+    iconSize: [25, 41], // Size of the icon
+    iconAnchor: [0, 0], // Point of the icon which will correspond to marker's location (bottom center)
+    popupAnchor: [0, 0], // Point from which the popup should open relative to the iconAnchor
   });
 
+  // Initialize the map
   useEffect(() => {
     if (mapRef.current === null) {
       // Initialize the map with default controls disabled
       mapRef.current = L.map("map", {
-        zoomControl: false, // Disable zoom control
-        attributionControl: false, // Disable attribution control
-      }).setView([38.246639, 21.734573], 8);
+        zoomControl: false,
+        attributionControl: false,
+        center: [38.246639, 21.734573],
+        zoom: 8,
+      });
 
       // Add the tile layer without attribution since attributionControl is false
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        // No attribution here
+        // No attribution included
       }).addTo(mapRef.current);
 
-      markersRef.current = L.layerGroup().addTo(mapRef.current);
+      // Add zoom controls manually if needed
+      L.control.zoom({
+        position: "topright",
+      }).addTo(mapRef.current);
+
+      // Initialize MarkerClusterGroup
+      markersRef.current = L.markerClusterGroup();
+      mapRef.current.addLayer(markersRef.current);
     }
 
+    // Cleanup on unmount
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
@@ -41,58 +73,79 @@ function Map() {
     };
   }, []);
 
+  // Fetch toll data from API
   useEffect(() => {
     const fetchTolls = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/tolls");
+        const response = await axios.get("http://localhost:9150/api/tolls");
         setTolls(response.data);
       } catch (error) {
         console.error("Error fetching tolls:", error);
+        setError("Failed to load toll data. Please try again later.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchTolls();
   }, []);
 
+  // List of operator options
+  const operatorOptions = [
+    "All",
+    "aegeanmotorway",
+    "egnatia",
+    "gefyra",
+    "kentrikiodos",
+    "moreas",
+    "naodos",
+    "neaodos",
+    "olympiaodos",
+  ];
+
+  // Filter tolls based on user input
   const filteredTolls = tolls.filter((toll) => {
-    const matchesOperator = filters.operator
-      ? toll.operator.toLowerCase().includes(filters.operator.toLowerCase())
-      : true;
+    const matchesOperator =
+      filters.operator === "all"
+        ? true
+        : toll.operator.toLowerCase() === filters.operator.toLowerCase();
     const matchesName = filters.name
       ? toll.name.toLowerCase().includes(filters.name.toLowerCase())
       : true;
     return matchesOperator && matchesName;
   });
 
+  // Update markers whenever filteredTolls changes
   useEffect(() => {
     if (mapRef.current && markersRef.current) {
       markersRef.current.clearLayers();
 
       filteredTolls.forEach((toll) => {
-        const marker = L.marker([toll.latitude, toll.longitude], { icon: customIcon })
-          .bindPopup(
-            `
-              <div class="popup-content">
-                <button class="close-button" onclick="this.parentElement.parentElement.style.display='none';">×</button>
-                <strong>${toll.name}</strong>
-                <span>Operator:</span> ${toll.operator}<br/>
-                <span>Email:</span> <a href="mailto:${toll.email}">${toll.email}</a><br/>
-                <span>Prices:</span> ${toll.prices.join(", ")}
-              </div>
-            `,
-            {
-              maxWidth: 400, // Increased width for better readability
-              autoPan: true,
-              closeButton: false, // Disable default close button
-              keepInView: true,
-            }
-          );
+        const marker = L.marker(
+          [toll.latitude, toll.longitude],
+          { icon: customIcon }
+        ).bindPopup(
+          `<div class="popup-content">
+            <button onclick="this.closest('.leaflet-popup').remove()" class="popup-close">×</button>
+            <strong>${toll.name}</strong><br/>
+            <strong>Operator:</strong> ${toll.operator}<br/>
+            <strong>Email:</strong> <a href="mailto:${toll.email}">${toll.email}</a><br/>
+            <strong>Prices:</strong><br/>
+            ${toll.prices.map((price) => `${price}<br/>`).join('')}
+          </div>`,
+          {
+            closeButton: false, // Disable default close button
+            autoPan: true,
+            className: 'custom-popup'
+          }
+        );
 
         markersRef.current.addLayer(marker);
       });
     }
-  }, [filteredTolls]);
+  }, [filteredTolls, customIcon]);
 
+  // Handle filter input changes
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prevFilters) => ({
@@ -101,21 +154,42 @@ function Map() {
     }));
   };
 
+  // Handle map resize to ensure proper rendering
+  useEffect(() => {
+    const handleResize = () => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <div>
+      {/* Filter Controls */}
       <div style={{ marginBottom: "20px" }}>
         <h3>Φίλτρα</h3>
+        {/* Operator Filter as Dropdown */}
         <label>
           Εταιρεία:
-          <input
-            type="text"
+          <select
             name="operator"
             value={filters.operator}
             onChange={handleFilterChange}
-            placeholder="Εταιρεία..."
             style={{ marginLeft: "10px" }}
-          />
+          >
+            {operatorOptions.map((operator) => (
+              <option key={operator} value={operator.toLowerCase()}>
+                {operator.charAt(0).toUpperCase() + operator.slice(1)}
+              </option>
+            ))}
+          </select>
         </label>
+        {/* Name Filter as Text Input */}
         <label style={{ marginLeft: "20px" }}>
           Όνομα:
           <input
@@ -128,7 +202,15 @@ function Map() {
           />
         </label>
       </div>
-      <div id="map" style={{ height: "500px", width: "100%" }}></div>
+
+      {/* Loading Indicator */}
+      {loading && <p>Loading toll data...</p>}
+
+      {/* Error Message */}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {/* Map Container */}
+      <div id="map" style={{ height: "600px", width: "100%" }}></div>
     </div>
   );
 }
