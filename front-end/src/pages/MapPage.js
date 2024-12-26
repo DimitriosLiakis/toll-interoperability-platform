@@ -77,7 +77,7 @@ function Map() {
   useEffect(() => {
     const fetchTolls = async () => {
       try {
-        const response = await axios.get("http://localhost:9150/api/tolls");
+        const response = await axios.get("http://localhost:9115/api/tolls");
         setTolls(response.data);
       } catch (error) {
         console.error("Error fetching tolls:", error);
