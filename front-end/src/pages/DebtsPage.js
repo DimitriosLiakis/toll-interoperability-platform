@@ -5,7 +5,7 @@ const DebtsPage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:9150/api/get_debts_optimization')
+    fetch('http://localhost:9115/api/get_debts_optimization')
       .then(async (response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
