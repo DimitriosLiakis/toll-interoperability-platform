@@ -6,11 +6,11 @@ const json2csv = require('json2csv').parse;
 
 const passAnalysis_controller = async (req, res, next) => {
     try {
-        const { stationOpID, tollOpID, date_from, date_to } = req.params;
+        const { stationOpID, tagOpID, date_from, date_to } = req.params;
         const formatQuery = req.query.format || 'json';
         
         // Validate required parameters
-        if (!stationOpID || !tollOpID || !date_from || !date_to) {
+        if (!stationOpID || !tagOpID || !date_from || !date_to) {
             return res.status(400).json({ error: 'Missing required parameters.' });
         }
 
@@ -25,7 +25,7 @@ const passAnalysis_controller = async (req, res, next) => {
 
         // Fetch data from the database
         const dbService = DbService.getDbServiceInstance();
-        const passList = await dbService.getpassAnalysis(stationOpID, tollOpID, formattedDateFrom, formattedDateTo);
+        const passList = await dbService.getpassAnalysis(stationOpID, tagOpID, formattedDateFrom, formattedDateTo);
 
         // Format requestTimestamp using date-fns
         const formattedRequestTimestamp = format(new Date(), 'yyyy-MM-dd HH:mm:ss');  // Format the current time
@@ -33,7 +33,7 @@ const passAnalysis_controller = async (req, res, next) => {
         // Construct response object
         const response = {
             stationOpID,
-            tollOpID,
+            tagOpID,
             requestTimestamp: formattedRequestTimestamp,  // formatted request timestamp
             periodFrom: formattedDateFrom,
             periodTo: formattedDateTo,
@@ -54,7 +54,7 @@ const passAnalysis_controller = async (req, res, next) => {
                 fields: ['passIndex', 'passID', 'stationID', 'timestamp', 'tagID', 'passCharge']
             });
             res.header('Content-Type', 'text/csv');
-            res.attachment(`pass_analysis_${stationOpID}_${tollOpID}_${date_from}_${date_to}.csv`);
+            res.attachment(`pass_analysis_${stationOpID}_${tagOpID}_${date_from}_${date_to}.csv`);
             return res.send(csv);
         } else {
             return res.status(200).json(response);

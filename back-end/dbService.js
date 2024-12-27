@@ -122,10 +122,9 @@ class DbService {
                 JOIN 
                     Toll tl ON p.tollID = tl.Toll_id
                 WHERE 
-                    t.company_id = ?  -- Χρησιμοποιούμε το company_id από τον πίνακα Transceiver
+                    t.company_id = ? 
                     AND DATE(p.timestamp) BETWEEN ? AND ?
             `;
-            // Εκτέλεση του query με τις παραμέτρους
             const [rows] = await promisePool.query(query, [tagOpID, dateFrom, dateTo]);
             return rows;
         } catch (error) {
