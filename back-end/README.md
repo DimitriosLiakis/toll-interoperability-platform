@@ -39,15 +39,6 @@ npm install
 
 Ensure that you have a Python virtual environment for Python dependencies. You can create and activate a virtual environment using:
 
-# Create a virtual environment
-python -m venv venv
-
-# Activate the virtual environment
-# On Windows
-venv\Scripts\activate
-# On macOS/Linux
-source venv/bin/activate
-
 Next, install the required Python packages:
 
 pip install -r requirements.txt
