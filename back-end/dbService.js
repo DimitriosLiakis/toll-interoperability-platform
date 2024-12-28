@@ -1,5 +1,8 @@
 const dotenv = require('dotenv');
 dotenv.config();
+const fs = require('fs');
+const path = require('path'); // To handle folder paths
+const { Parser } = require('json2csv');
 
 const mysql = require('mysql2');
 
@@ -132,7 +135,61 @@ class DbService {
             throw error;
         }
     }
-    
 
+
+    async data_for_nop(company_id) {
+        try {
+            const query = `
+                SELECT 
+                    p.tollID, 
+                    DATE_FORMAT(DATE(p.timestamp), '%Y-%m-%d') AS date, 
+                    COUNT(*) AS total_passages
+                FROM 
+                    Passages p
+                JOIN 
+                    Toll t ON p.tollID = t.Toll_id
+                JOIN 
+                    Company c ON t.OpID = c.company_id
+                WHERE 
+                    c.company_id = ?
+                GROUP BY 
+                    p.tollID, date;
+
+            `;
+            const [rows] = await promisePool.query(query, company_id);
+    
+            if (rows.length > 0) {
+                // Define custom column names
+                const fields = [
+                    { label: 'tollID', value: 'tollID' },
+                    { label: 'date', value: 'date' },
+                    { label: 'total_passages', value: 'total_passages' },
+                ];
+    
+                const csvParser = new Parser({ fields });
+                const csvData = csvParser.parse(rows);
+    
+                const folderPath = path.join(__dirname, './ml/data');
+                if (!fs.existsSync(folderPath)) {
+                    fs.mkdirSync(folderPath, { recursive: true }); // Create folder if it doesn't exist
+                }
+    
+                // Save the CSV file to the specified folder
+                const fileName = `company_${company_id}_passages.csv`;
+                const filePath = path.join(folderPath, fileName);
+                fs.writeFileSync(filePath, csvData);
+    
+                console.log(`Data successfully saved to ${filePath}`);
+            } else {
+                console.log('No data found for the given company_id');
+            }
+    
+            return rows;
+        } catch (error) {
+            console.error('Error in data_for_nop:', error.message);
+            throw error;
+        }
+    }
+    
 }
 module.exports = DbService;
