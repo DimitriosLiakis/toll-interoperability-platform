@@ -133,6 +133,15 @@ class DbService {
         }
     }
     
+    async getUser(user_email){
+        try {
+            const query = `SELECT * FROM user_login WHERE user_email = ?`;
+            const [rows] = await promisePool.query(query, [user_email]);
+            return rows[0];
+        } catch (error) {
+            console.error('Error in getUser:', error.message);
+        }
+    }
 
 }
 module.exports = DbService;

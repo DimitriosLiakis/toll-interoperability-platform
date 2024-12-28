@@ -5,7 +5,8 @@ const app = express();
 
 // Middleware for parsing JSON
 app.use(cors());
-app.use(express.json()); // Allows the server to parse incoming JSON data
+app.use(express.json()); // Allows the server to parse incoming JSON data'
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/debt_figures', express.static(path.join(__dirname, 'debt_figures')));
@@ -20,7 +21,8 @@ const tollStationRouter = require('./routers/tollStationsPasses_router');
 const passesCost = require('./routers/passesCost_router');
 const tollRouter = require('./routers/tollRouter');
 const chargesBy = require('./routers/chargesBy_router');
-const passAnalysis = require('./routers/passAnalysis_router')
+const passAnalysis = require('./routers/passAnalysis_router');
+const authRouter = require('./routers/auth_router');
 
 
 // Use the routes
@@ -33,6 +35,7 @@ app.use('/api/passesCost', passesCost)
 app.use('/api/chargesBy', chargesBy);
 app.use('/api', tollRouter);
 app.use('/api/passAnalysis', passAnalysis);
+app.use('/', authRouter);
 
 // Root route
 app.get('/', (req, res) => {
