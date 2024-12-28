@@ -137,6 +137,20 @@ class DbService {
     }
 
 
+
+    async tollstations(company_id) {
+        try {
+            const query = `
+                SELECT Toll_id FROM Toll 
+                WHERE OpID= ? ;`
+            const [rows] = await promisePool.query(query, company_id);
+            return rows;
+        } catch (error) {
+            console.error('Error in getRecordsBetweenIds:', error.message);
+            throw error;
+        }  
+    }
+    
     async data_for_nop(company_id) {
         try {
             const query = `

@@ -7,26 +7,49 @@ const json2csv = require('json2csv').parse;
 
 const forecast_controller = async (req, res, next) => {
     try {
-        const { company_id, type } = req.params;
+        const { company_id, date } = req.params;
         const formatQuery = req.query.format || 'json';
 
         // Validate required parameters
-        if (!company_id || !type) {
+        if (!company_id || !date) {
             return res.status(400).json({ error: 'Missing required parameters' });
         }
 
-        // if (!['500', 'profit'].includes(type)) {
-        //     return res.status(400).json({ error: 'Invalid type parameter' });
-        // }
-      
-        return makePassagePrediction(company_id, res, formatQuery);
+        if (!/^\d{8}$/.test(date)) {
+            return res.status(400).json({ error: 'Invalid date format. Use YYYYMMDD.' });
+        }
+
+        const formattedDate = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+
+        const dbService = DbService.getDbServiceInstance();
+        const tolls_of_company = await dbService.tollstations(company_id);
+
+        // Create CSV for the given toll data
+        const tollData = tolls_of_company.map(toll => ({
+            tollID: toll.Toll_id,
+            date: formattedDate,  // Using the provided date
+        }));
+
+        const folderPath = path.join(__dirname, '../ml/input');
+        if (!fs.existsSync(folderPath)) {
+            fs.mkdirSync(folderPath, { recursive: true }); // Create folder if it doesn't exist
+        }
+
+        const csvData = json2csv(tollData);
+        const filePath = path.join(folderPath, `company_${company_id}_passages.csv`);
+
+        // Write the CSV file
+        fs.writeFileSync(filePath, csvData);
+
+        // Proceed with the prediction logic after creating the CSV
+        return makePassagePrediction(company_id, res, formatQuery, filePath);
     } catch (error) {
         console.error('[forecast_controller] Error:', error.message);
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
 
-async function makePassagePrediction(company_id, res, formatQuery) {
+async function makePassagePrediction(company_id, res, formatQuery, inputCsvPath) {
     try {
         const dbService = DbService.getDbServiceInstance();
         const data_for_nop = await dbService.data_for_nop(company_id);
@@ -36,17 +59,6 @@ async function makePassagePrediction(company_id, res, formatQuery) {
         }
 
         const dict_id_input = ['AM', 'EG', 'GE', 'KO', 'MO', 'NAO', 'NO', 'OO'];
-
-        const fileMapping = dict_id_input.reduce((map, companyId) => {
-            const folderPath = path.join(__dirname, '../ml/data'); // Define the base folder path
-            if (!fs.existsSync(folderPath)) {
-                fs.mkdirSync(folderPath, { recursive: true }); // Create folder if it doesn't exist
-            }
-
-            const filePath = path.join(folderPath, `company_${companyId}_passages.csv`);
-            map[companyId] = filePath;
-            return map;
-        }, {});
 
         const modelFileMapping = dict_id_input.reduce((map, companyId) => {
             const modelFolderPath = path.join(__dirname, '../models');
@@ -59,29 +71,28 @@ async function makePassagePrediction(company_id, res, formatQuery) {
             return map;
         }, {});
 
-
         const outputMapping = dict_id_input.reduce((map, companyId) => {
-            const folderPath = path.join(__dirname, '../ml/results'); 
+            const folderPath = path.join(__dirname, '../ml/results');
             if (!fs.existsSync(folderPath)) {
                 fs.mkdirSync(folderPath, { recursive: true });
             }
 
-            const filePath = path.join(folderPath, `output_${companyId}_passages.csv`); // Corrected the output file naming
+            const filePath = path.join(folderPath, `output_${companyId}_passages.csv`);
             map[companyId] = filePath;
             return map;
         }, {});
 
-        if (!fileMapping[company_id] || !modelFileMapping[company_id]) {
-            return res.status(404).json({ error: `No data or model found for company: ${company_id}` });
+        if (!modelFileMapping[company_id]) {
+            return res.status(404).json({ error: `No model found for company: ${company_id}` });
         }
 
         // Spawn the Python process with the correct paths and output file
         const pythonProcess = spawn('python3', [
             './ml/predict.py', 
             '--company', company_id,
-            '--input_csv', fileMapping[company_id],
+            '--input_csv', inputCsvPath,  // Using the generated CSV
             '--model_path', modelFileMapping[company_id],
-            '--output_csv', outputMapping[company_id] 
+            '--output_csv', outputMapping[company_id]
         ]);
 
         let pythonOutput = '';
