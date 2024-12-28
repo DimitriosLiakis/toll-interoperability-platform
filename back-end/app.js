@@ -24,7 +24,7 @@ const passAnalysis = require('./routers/passAnalysis_router')
 
 
 // Use the routes
-app.use('/api/passing_toll', passing_toll_routes);
+app.use('/api/passing_toll',passing_toll_routes);
 app.use('/api/upload_passages', upload_passages_routes);
 app.use('/api/cancel_debts', cancel_debts);
 app.use('/api/get_debts_optimization', get_figures)

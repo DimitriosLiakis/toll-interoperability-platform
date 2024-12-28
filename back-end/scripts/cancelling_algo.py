@@ -8,6 +8,7 @@ import time
 import networkx as nx
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
+import plotly.graph_objects as go
 
 # Load environment variables from .env file
 load_dotenv()
@@ -108,30 +109,66 @@ def fill_graph(graph):
         print(f"Error: {e}")
         sys.exit(1)
 
-def visualize_graph(graph, title, filename):
-    """Visualize the graph using NetworkX and Matplotlib, excluding zero-cost edges."""
-    G = nx.DiGraph()
+from pyvis.network import Network
+import os
 
+def visualize_graph(graph, title, filename):
+    """Visualize the graph using Pyvis for a stunning, interactive experience."""
+    # Create a Pyvis Network instance
+    net = Network(height="750px", width="100%", bgcolor="#222222", font_color="white", directed=True)
+    
+    # Add nodes and edges to the network
     for debtor, creditors in graph.items():
         for creditor, amount in creditors.items():
             if amount > 0:
-                G.add_edge(debtor, creditor, weight=amount)
+                # Add nodes
+                net.add_node(debtor, label=debtor, title=f"Node: {debtor}", color="#87CEEB")
+                net.add_node(creditor, label=creditor, title=f"Node: {creditor}", color="#FF69B4")
+                # Add edges with weight as title (tooltip) and amount as label over the edge
+                net.add_edge(debtor, creditor, value=amount, title=f"Weight: {amount}", label=str(amount))
 
-    pos = nx.spring_layout(G, k=1, scale=1)
-    edge_labels = nx.get_edge_attributes(G, 'weight')
+    # Set physics to make the graph dynamic and fancy
+    net.set_options("""
+    var options = {
+      "nodes": {
+        "shape": "dot",
+        "size": 16,
+        "font": {
+          "size": 20
+        }
+      },
+      "edges": {
+        "color": {
+          "inherit": true
+        },
+        "smooth": {
+          "type": "dynamic"
+        },
+        "label": {
+          "font": {
+            "size": 18,
+            "color": "white"
+          }
+        }
+      },
+      "physics": {
+        "enabled": true,
+        "barnesHut": {
+          "gravitationalConstant": -20000,
+          "springLength": 100
+        }
+      }
+    }
+    """)
 
-    plt.figure(figsize=(12, 10))
-    nx.draw(G, pos, with_labels=True, node_color="lightblue", node_size=2000, font_size=10, font_weight="bold", arrowsize=20)
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=8)
-
-    output_dir = "./"
+    # Save the graph to an HTML file
+    output_dir = "../debt_figures"
     os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, f"{filename}.png")
+    output_path = os.path.join(output_dir, f"{filename}.html")
+    net.save_graph(output_path)
+    print(f"Graph saved to {output_path}")
 
-    plt.savefig(output_path, format="png", dpi=300)
-    plt.close()
 
-    print(output_path)
 
 if __name__ == "__main__":
     graph1 = {}
