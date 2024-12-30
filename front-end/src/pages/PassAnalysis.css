@@ -5,7 +5,6 @@ form {
     background-color: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 8px;
-    
 }
 
 form div {
@@ -25,7 +24,6 @@ select, input[type="date"], button {
     border-radius: 5px;
     font-size: 14px;
     box-sizing: border-box;
-    margin-top: 5px;
 }
 
 select:focus, input[type="date"]:focus {
@@ -45,80 +43,10 @@ button {
 }
 
 button:hover {
-    background-color: #007bff;
+    background-color: #0056b3;
 }
 
 button:disabled {
     background-color: #aaa;
     cursor: not-allowed;
-}
-
-/* Error Message */
-.error {
-    color: red;
-    margin-bottom: 20px;
-    text-align: center;
-    font-weight: bold;
-}
-
-/* Data Display Section */
-.data-section {
-    padding: 20px;
-    background-color: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin-top: 20px;
-}
-
-h3 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
-    font-size: 14px;
-}
-
-table thead {
-    background-color: #007bff;
-    color: white;
-}
-
-table th, table td {
-    border: 1px solid #ddd;
-    text-align: left;
-    padding: 8px;
-}
-
-table th {
-    text-transform: uppercase;
-}
-
-table tr:nth-child(even) {
-    background-color: #f2f2f2;
-}
-
-table tr:hover {
-    background-color: #e9f5e9;
-}
-
-/* Download Link */
-.download-link {
-    display: block;
-    text-align: center;
-    background-color: #007bff;
-    color: white;
-    text-decoration: none;
-    padding: 10px;
-    margin-top: 20px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-}
-
-.download-link:hover {
-    background-color: #007bff;
 }
