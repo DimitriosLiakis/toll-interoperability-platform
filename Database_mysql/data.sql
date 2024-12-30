@@ -21,7 +21,14 @@
 
 LOCK TABLES `Company` WRITE;
 /*!40000 ALTER TABLE `Company` DISABLE KEYS */;
-INSERT INTO `Company` VALUES ('AM','Aegean Motorway','aegean.motorway@example.com',30),('EG','Egnatia Odos','egnatia.odos@example.com',74),('GE','Gefyra S.A.','gefyra@example.com',2),('KO','Kentriki Odos','kentriki.odos@example.com',26),('MO','Moreas S.A.','moreas@example.com',18),('NAO','Naodos S.A.','naodos@example.com',41),('NO','Nea Odos','nea.odos@example.com',34),('OO','Olympia Odos','olympia.odos@example.com',28);
+INSERT INTO `Company` VALUES 
+('EG','Egnatia Odos','egnatia.odos@example.com',74),
+('GE','Gefyra S.A.','gefyra@example.com',2),
+('KO','Kentriki Odos','kentriki.odos@example.com',26),
+('MO','Moreas S.A.','moreas@example.com',18),
+('NAO','Naodos S.A.','naodos@example.com',41),
+('NO','Nea Odos','nea.odos@example.com',34),
+('OO','Olympia Odos','olympia.odos@example.com',28);
 /*!40000 ALTER TABLE `Company` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -82,3 +89,16 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2024-11-14 18:45:54
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` (`user_id`, `user_email`, `user_password`, `user_session_id`) VALUES
+(3, 'admin@aodos.gr', '$2a$10$hnMxkjAyQNB0c8Fq9w7L/.YASQT4TZBY1gWdnkO6QjqwiuH0Z2u32', NULL),
+(4, 'admin@gefyra.gr', '$2a$10$GwcjxQYmV21SlWwanMY/ceaf9JsGscROITzGk8onPByHqWf6vXZqW', NULL),
+(5, 'admin@egnatia.eu', '$2a$10$6yj9du32tymJdAkVIDh88ed3p9vH9AamO5Ebjiaitdd.hp9pE4fuO', NULL),
+(6, 'admin@kentrikiodos.gr', '$2a$10$bEjy.XHVP7iUvFFyE1ks4umerJ315wP6aa3Avoyn8pTjd9VmpdC4W', NULL),
+(7, 'admin@moreas.com.gr', '$2a$10$UcQesbnOGvBGjMPuJ7DBPuvZxtnN8yz7FsTspsRbyDIV/8bApqgyy', NULL),
+(8, 'admin@neaodos.gr', '$2a$10$UfvF/QjfMttUNTkXIY9KQObV17s33/yukwEWfs7etDZ0PHSzJbIRu', NULL),
+(9, 'admin@olympiaodos.gr', '$2a$10$gNYqHhdil5w4jZ1DQbUw7.nuDn4mEy4h6u4qiLByLttFMIvG8WOHK', NULL);
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
