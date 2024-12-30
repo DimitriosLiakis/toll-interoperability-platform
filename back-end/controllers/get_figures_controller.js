@@ -8,39 +8,47 @@ const util = require('util');
 const execPromise = util.promisify(exec);
 
 const get_figures = async (req, res) => {
-    // Check for required query parameter (example: 'type')
-    // const { type } = req.query;
-    // if (!type) {
-    //     return res.status(400).json({ error: 'Missing required query parameter: type' }); // 400 Bad Request
-    // }
+    const figDir = path.join(__dirname, "../debt_figures");
 
-    const fig1Dir = path.join(__dirname, "../debt_figures");
     const figure1_name = 'initial_debts.png';
-    const file_path = path.join(fig1Dir, figure1_name);
-
-    const fig2Dir = path.join(__dirname, "../debt_figures");
     const figure2_name = 'final_debts.png';
-    const file_path_2 = path.join(fig2Dir, figure2_name);
+    const html1_name = 'initial_debts.html';
+    const html2_name = 'final_debts.html';
+
+    const file_paths = {
+        figure1: path.join(figDir, figure1_name),
+        figure2: path.join(figDir, figure2_name),
+        html1: path.join(figDir, html1_name),
+        html2: path.join(figDir, html2_name),
+    };
 
     // Use the DbService to access the database
     const dbService = DbService.getDbServiceInstance();
     try {
         // Check if the files exist before trying to read them
-        if (!fs.existsSync(file_path) || !fs.existsSync(file_path_2)) {
-            // If either of the files is missing, return a 204 No Content response
-            return res.status(204).send(); // No Content
+        for (const filePath of Object.values(file_paths)) {
+            if (!fs.existsSync(filePath)) {
+                // If any of the files are missing, return a 204 No Content response
+                return res.status(204).send(); // No Content
+            }
         }
 
-        // Read the files as base64 encoded strings
-        const figure1Data = fs.readFileSync(file_path, { encoding: 'base64' });
-        const figure2Data = fs.readFileSync(file_path_2, { encoding: 'base64' });
+        // Read the files as base64 encoded strings for images and plain strings for HTML
+        const figure1Data = fs.readFileSync(file_paths.figure1, { encoding: 'base64' });
+        const figure2Data = fs.readFileSync(file_paths.figure2, { encoding: 'base64' });
+        const html1Data = fs.readFileSync(file_paths.html1, { encoding: 'utf-8' });
+        const html2Data = fs.readFileSync(file_paths.html2, { encoding: 'utf-8' });
 
-        // Send a successful response with the figures as base64-encoded data
+        // Send a successful response with the figures and HTML files
         res.status(200).json({
             message: "Figures of initial debts and debts after the optimization",
             figures: {
                 figure1: `data:image/png;base64,${figure1Data}`,
                 figure2: `data:image/png;base64,${figure2Data}`,
+            },
+            html: {
+                html1: html1Data,
+                html2: html2Data,
             },
         });
     } catch (error) {
