@@ -22,6 +22,7 @@ const tollRouter = require('./routers/tollRouter');
 const chargesBy = require('./routers/chargesBy_router');
 const passAnalysis = require('./routers/passAnalysis_router')
 const forecast = require('./routers/forecast_router');
+const training = require('./routers/train_router');
 
 
 // Use the routes
@@ -42,6 +43,7 @@ app.use('/api', tollRouter);
 //--------------------------
 // --- use Case 3 ---
 app.use('/api/forecast', forecast);
+app.use('/api/training', training);
 
 
 // Root route

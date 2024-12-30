@@ -60,7 +60,7 @@ async function makePassagePrediction(company_id, res, formatQuery, inputCsvPath)
         const dict_id_input = ['AM', 'EG', 'GE', 'KO', 'MO', 'NAO', 'NO', 'OO'];
 
         const modelFileMapping = dict_id_input.reduce((map, companyId) => {
-            const modelFolderPath = path.join(__dirname, '../models');
+            const modelFolderPath = path.join(__dirname, '../models_passages');
             if (!fs.existsSync(modelFolderPath)) {
                 fs.mkdirSync(modelFolderPath, { recursive: true });
             }
