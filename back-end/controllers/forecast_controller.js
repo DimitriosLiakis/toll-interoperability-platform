@@ -34,7 +34,6 @@ const forecast_controller = async (req, res, next) => {
         if (!fs.existsSync(folderPath)) {
             fs.mkdirSync(folderPath, { recursive: true }); // Create folder if it doesn't exist
         }
-
         const csvData = json2csv(tollData);
         const filePath = path.join(folderPath, `company_${company_id}_passages.csv`);
 
