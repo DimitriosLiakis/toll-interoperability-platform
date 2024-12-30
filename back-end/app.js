@@ -22,7 +22,7 @@ const tollRouter = require('./routers/tollRouter');
 const chargesBy = require('./routers/chargesBy_router');
 const passAnalysis = require('./routers/passAnalysis_router')
 const forecast = require('./routers/forecast_router');
-const training = require('./routers/train_router');
+const training = require('./routers/training_router');
 
 
 // Use the routes

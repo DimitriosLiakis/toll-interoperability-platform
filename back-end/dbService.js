@@ -183,7 +183,7 @@ class DbService {
                 const csvParser = new Parser({ fields });
                 const csvData = csvParser.parse(rows);
     
-                const folderPath = path.join(__dirname, './ml/data');
+                const folderPath = path.join(__dirname, './ml/training_data');
                 if (!fs.existsSync(folderPath)) {
                     fs.mkdirSync(folderPath, { recursive: true }); // Create folder if it doesn't exist
                 }
