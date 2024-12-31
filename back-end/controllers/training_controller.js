@@ -8,33 +8,30 @@ const json2csv = require('json2csv').parse;
 const training_controller = async (req, res, next) => {
     try {
         const dbService = DbService.getDbServiceInstance();
-        const company_id = ['AM', 'EG', 'GE', 'KO', 'MO', 'NAO', 'NO', 'OO'];
+        const company_ids = ['AM', 'EG', 'GE', 'KO', 'MO', 'NAO', 'NO', 'OO'];
 
         const errors = [];
-        for (let i = 0; i < company_id.length; i++) {
-            const data_for_nop = await dbService.data_for_nop(company_id[i]);
+        for (let i = 0; i < company_ids.length; i++) {
+            const data_for_nop = await dbService.data_for_nop(company_ids[i]);
             if (!data_for_nop) {
-                errors.push({ company: company_id[i], error: 'No data found' });
+                errors.push({ company: company_ids[i], error: 'No data found' });
                 continue; // Skip training for this company
             }
 
-            // Save the data to a CSV file
-            const csvFilePath = saveDataToCSV(company_id[i], data_for_nop);
+            const csvFilePath = saveDataToCSV(company_ids[i], data_for_nop);
 
-            // Train the model for this company
-            await training_the_models(company_id[i], csvFilePath);
+            await training_the_models(company_ids[i], csvFilePath);
         }
-
         if (errors.length > 0) {
             return res.status(404).json({
                 error: 'Data missing for one or more companies',
                 details: errors,
             });
         }
-        return res.status(200).json({ message: 'Models trained successfully for all companies' });
+        // return res.status(200).json({ message: 'Models trained successfully for all companies' });
     } catch (error) {
         console.error('[training_controller] Error:', error.message);
-        return res.status(500).json({ error: 'Internal server error' });
+        // return res.status(500).json({ error: 'Internal server error' });
     }
 };
 
@@ -77,14 +74,13 @@ async function training_the_models(company_id, dataCsvPath) {
     });
 }
 
-// Function to save data to a CSV file
 function saveDataToCSV(company_id, data) {
     const folderPath = path.join(__dirname, '../ml/training_data');
     if (!fs.existsSync(folderPath)) {
         fs.mkdirSync(folderPath, { recursive: true });
     }
 
-    const filePath = path.join(folderPath, `data_${company_id}.csv`);
+    const filePath = path.join(folderPath, `company_${company_id}_passages.csv`);
     const csvData = json2csv(data);
 
     fs.writeFileSync(filePath, csvData, 'utf8');

@@ -23,6 +23,7 @@ const chargesBy = require('./routers/chargesBy_router');
 const passAnalysis = require('./routers/passAnalysis_router')
 const forecast = require('./routers/forecast_router');
 const training = require('./routers/training_router');
+const peak_hour = require('./routers/peak_hour_router');
 
 
 // Use the routes
@@ -42,8 +43,9 @@ app.use('/api/passAnalysis', passAnalysis);
 app.use('/api', tollRouter);
 //--------------------------
 // --- use Case 3 ---
-app.use('/api/forecast', forecast);
-app.use('/api/training', training);
+app.use('/api/forecast', forecast); //forecast only for passages
+app.use('/api/peak_hour', peak_hour);
+app.use('/api/training', training); //trains everything
 
 
 // Root route
