@@ -51,7 +51,7 @@ exports.uploadCsv = async (req, res) => {
 
       // Check if no file was uploaded
       if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded.' });
+        return res.status(204).json({ message: 'No file uploaded.' });
       }
 
       // Check if the format query parameter exists (defaults to 'json')

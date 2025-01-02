@@ -1,11 +1,8 @@
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const DbService = require('../dbService.js'); // Database service
+const DbService = require('../dbService.js');
 const util = require('util');
-
-// Promisify the exec function for easier use with async/await
-const execPromise = util.promisify(exec);
 
 const get_figures = async (req, res) => {
     // Check for required query parameter (example: 'type')
@@ -22,7 +19,6 @@ const get_figures = async (req, res) => {
     const figure2_name = 'final_debts.png';
     const file_path_2 = path.join(fig2Dir, figure2_name);
 
-    // Use the DbService to access the database
     const dbService = DbService.getDbServiceInstance();
     try {
         // Check if the files exist before trying to read them
@@ -31,11 +27,9 @@ const get_figures = async (req, res) => {
             return res.status(204).send(); // No Content
         }
 
-        // Read the files as base64 encoded strings
         const figure1Data = fs.readFileSync(file_path, { encoding: 'base64' });
         const figure2Data = fs.readFileSync(file_path_2, { encoding: 'base64' });
 
-        // Send a successful response with the figures as base64-encoded data
         res.status(200).json({
             message: "Figures of initial debts and debts after the optimization",
             figures: {
@@ -44,7 +38,6 @@ const get_figures = async (req, res) => {
             },
         });
     } catch (error) {
-        // Handle errors that occur during file reading or any other unforeseen issue
         console.error('Error:', error.message || error.stderr || 'Unknown error.');
         res.status(500).json({
             error: error.message || 'An unexpected error occurred.',

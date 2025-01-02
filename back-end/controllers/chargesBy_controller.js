@@ -25,9 +25,20 @@ const chargesBy_controller = async (req, res, next) => {
 
         const visitingOperators = ['AM', 'EG', 'GE', 'KO', 'MO', 'NAO', 'NO', 'OO'];
 
+        let a=0;
 
-        if (!visitingOperators || visitingOperators.length === 0) {
-            return res.status(404).json({ error: 'No visiting operators found for the given period.' });
+        for (const visitingOpID of visitingOperators) {
+            if (tollOpID==visitingOpID)
+                a++;
+        }
+
+        if (a==0)
+            return res.status(400).json({ error: 'Error in Operator selection' });
+
+        
+        
+            if (!visitingOperators || visitingOperators.length === 0) {
+            return res.status(400).json({ error: 'No visiting operators found for the given period.' });
         }
 
         const response = {

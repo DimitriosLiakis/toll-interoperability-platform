@@ -10,7 +10,6 @@ const forecast_controller = async (req, res, next) => {
         const { company_id, date } = req.params;
         const formatQuery = req.query.format || 'json';
 
-        // Validate required parameters
         if (!company_id || !date) {
             return res.status(400).json({ error: 'Missing required parameters' });
         }

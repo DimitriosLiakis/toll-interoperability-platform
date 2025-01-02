@@ -130,7 +130,7 @@ async function makePeakHourPrediction(company_id, res, formatQuery, inputCsvPath
             try {
                 const result = JSON.parse(pythonOutput);
                 if (!result || result.length === 0) {
-                    return res.status(404).json({ error: 'No predictions found' });
+                    return res.status(204).json({ error: 'No predictions found' });
                 }
 
                 if (formatQuery === 'csv') {
