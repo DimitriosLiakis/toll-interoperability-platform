@@ -1,16 +1,14 @@
 const path = require('path');
 const fs = require('fs');
-const DbService = require('../dbService.js'); // Database service
+const DbService = require('../dbService.js'); 
 const util = require('util');
-const json2csv = require('json2csv').parse; // Για μετατροπή σε CSV
+const json2csv = require('json2csv').parse; 
 
-// Controller για την επιστροφή διελεύσεων
 const getTollStationPasses = async (req, res, next) => {
     try {
         const { tollStationID, date_from, date_to } = req.params;
         const format = req.query.format || 'json'; // Default μορφή JSON
 
-        // Έλεγχος αν λείπουν παράμετροι
         if (!tollStationID || !date_from || !date_to) {
             return res.status(400).json({ error: 'Missing required parameters: tollStationID, date_from, date_to' });
         }
@@ -26,7 +24,7 @@ const getTollStationPasses = async (req, res, next) => {
         const dbService = DbService.getDbServiceInstance();
         const passes = await dbService.getRecordsBetweenDate(tollStationID, formattedDateFrom, formattedDateTo);
         console.log(passes)
-        // Αν δεν υπάρχουν δεδομένα
+
         if (passes.length === 0) {
             return res.status(204).send(); // 204 No Content
         }
