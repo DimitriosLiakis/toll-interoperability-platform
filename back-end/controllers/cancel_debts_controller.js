@@ -13,25 +13,20 @@ const cancel_debts = async (req, res) => {
     const scriptName = 'cancelling_algo.py';
     const pythonPath = path.join(scriptDir, scriptName);
 
-    // Target directory for moving .png files
     const uploadDir = path.join(__dirname, '../debt_figures');
 
     try {
-        // Ensure the upload directory exists
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
 
-        // Run the Python script
         console.log('Running Python script...');
         const { stdout } = await execPromise(`python3 "${pythonPath}"`);
 
-        // Parse the file paths output from the Python script
         const filePaths = stdout.trim().split('\n');
 
         console.log("The filepaths of the figures are:", filePaths);
 
-        // If no files were returned, return a 204 No Content response
         if (filePaths.length === 0 || filePaths[0] === '') {
             return res.status(204).send(); // No Content
         }

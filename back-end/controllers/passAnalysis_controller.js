@@ -23,14 +23,11 @@ const passAnalysis_controller = async (req, res, next) => {
         const formattedDateFrom = `${date_from.slice(0, 4)}-${date_from.slice(4, 6)}-${date_from.slice(6, 8)}`;
         const formattedDateTo = `${date_to.slice(0, 4)}-${date_to.slice(4, 6)}-${date_to.slice(6, 8)}`;
 
-        // Fetch data from the database
         const dbService = DbService.getDbServiceInstance();
         const passList = await dbService.getpassAnalysis(stationOpID, tagOpID, formattedDateFrom, formattedDateTo);
 
-        // Format requestTimestamp using date-fns
         const formattedRequestTimestamp = format(new Date(), 'yyyy-MM-dd HH:mm:ss');  // Format the current time
 
-        // Construct response object
         const response = {
             stationOpID,
             tagOpID,
@@ -47,8 +44,9 @@ const passAnalysis_controller = async (req, res, next) => {
                 passCharge: parseFloat(pass.passCharge)
             }))
         };
+        if (response.nPasses==0)
+            return res.status(204).json({ error: 'No Content' });
 
-        // Return response in requested format
         if (formatQuery === 'csv') {
             const csv = json2csv(response.passList, {
                 fields: ['passIndex', 'passID', 'stationID', 'timestamp', 'tagID', 'passCharge']

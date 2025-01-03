@@ -28,8 +28,6 @@ class DbService {
         }
         return this.instance;
     }
-
-    // Fetch the last passage_id from the database
     async getLastPassageId() {
         try {
             console.log('Fetching last passage_id...');
@@ -89,7 +87,6 @@ class DbService {
             throw error;
         }
     }
-
     async getDebtBetween2companies(tollOpID, tagOpID, dateFrom, dateTo) {
         try {
             const query = `
@@ -107,7 +104,6 @@ class DbService {
             throw error;
         }
     }
-
     async getpassAnalysis(stationOpID, tagOpID, dateFrom, dateTo) {
         try {
             const query = `
@@ -137,6 +133,15 @@ class DbService {
     }
 
 
+    async getUser(user_email) {
+        try {
+            const query = `SELECT * FROM user_login WHERE user_email = ?`;
+            const [rows] = await promisePool.query(query, [user_email]);
+            return rows[0];
+        } catch (error) {
+            console.error('Error in getUser:', error.message);
+        }
+    }
 
     async tollstations(company_id) {
         try {
@@ -148,9 +153,9 @@ class DbService {
         } catch (error) {
             console.error('Error in getRecordsBetweenIds:', error.message);
             throw error;
-        }  
+        }
     }
-    
+
     async data_for_nop(company_id) {
         try {
             const query = `
@@ -171,36 +176,107 @@ class DbService {
 
             `;
             const [rows] = await promisePool.query(query, company_id);
+
+            return rows;
+        } catch (error) {
+            console.error('Error in data_for_nop:', error.message);
+            throw error;
+        }
+    }
+
+    async data_for_peak_hour(company_id) {
+        try {
+            const query = `
+                SELECT 
+                    DATE_FORMAT(p.timestamp, '%Y-%m-%d') AS passage_date, 
+                    HOUR(p.timestamp) AS hour, 
+                    t.OpID AS OpID, 
+                    COUNT(p.passage_id) AS passage_count
+                FROM 
+                    Passages p
+                JOIN 
+                    Toll t ON p.tollID = t.Toll_id
+                WHERE 
+                    t.OpID = ? 
+                GROUP BY 
+                    passage_date, hour, t.OpID
+                ORDER BY 
+                    passage_date, hour, t.OpID;
+            `;
+            
+            // Execute the query with company_id
+            const [rows] = await promisePool.query(query, company_id);
     
-            if (rows.length > 0) {
-                // Define custom column names
-                const fields = [
-                    { label: 'tollID', value: 'tollID' },
-                    { label: 'date', value: 'date' },
-                    { label: 'total_passages', value: 'total_passages' },
-                ];
+            // console.log('Data fetched from DB:', rows);
+            return rows;
+        } catch (error) {
+            console.error('Error in data_for_peak_hour:', error.message);
+            throw error;
+        }
+    }
     
-                const csvParser = new Parser({ fields });
-                const csvData = csvParser.parse(rows);
-    
-                const folderPath = path.join(__dirname, './ml/data');
-                if (!fs.existsSync(folderPath)) {
-                    fs.mkdirSync(folderPath, { recursive: true }); // Create folder if it doesn't exist
-                }
-    
-                // Save the CSV file to the specified folder
-                const fileName = `company_${company_id}_passages.csv`;
-                const filePath = path.join(folderPath, fileName);
-                fs.writeFileSync(filePath, csvData);
-    
-                console.log(`Data successfully saved to ${filePath}`);
-            } else {
-                console.log('No data found for the given company_id');
-            }
+
+    async peak_input_data(company_id, DateFrom, DateTo) {
+        try {
+            const query = `
+                SELECT DATE(p.timestamp) AS passage_date, t.OpID as company
+                FROM Passages p 
+                JOIN Toll t ON p.tollID = t.Toll_id
+                WHERE t.OpID = ? 
+                AND DATE(p.timestamp) BETWEEN ? AND ?;
+            `;
+            // Pass parameters as an array
+            const rows = await promisePool.query(query, [company_id, DateFrom, DateTo]);
     
             return rows;
         } catch (error) {
             console.error('Error in data_for_nop:', error.message);
+            throw error;
+        }
+    }
+    
+    async get_most_passages_for_date_and_company(company_id) {
+        try {
+            const query = `
+                SELECT 
+    grouped.passage_date,
+    grouped.company,
+    grouped.hour_of_day
+FROM (
+    SELECT 
+        DATE(p.timestamp) AS passage_date,
+        t.OpID AS company,
+        HOUR(p.timestamp) AS hour_of_day,
+        COUNT(*) AS passages_count
+    FROM Passages p
+    JOIN Toll t ON p.tollID = t.Toll_id
+    GROUP BY passage_date, company, hour_of_day
+) AS grouped
+WHERE grouped.company = ?
+  AND (grouped.passage_date, grouped.company, grouped.passages_count) IN (
+      SELECT 
+          passage_date,
+          company,
+          MAX(passages_count) AS max_passages_count
+      FROM (
+          SELECT 
+              DATE(p.timestamp) AS passage_date,
+              t.OpID AS company,
+              HOUR(p.timestamp) AS hour_of_day,
+              COUNT(*) AS passages_count
+          FROM Passages p
+          JOIN Toll t ON p.tollID = t.Toll_id
+          GROUP BY passage_date, company, hour_of_day
+      ) AS subquery
+      GROUP BY passage_date, company
+  )
+ORDER BY grouped.passage_date;
+
+            `;
+            const rows = await promisePool.query(query, company_id);
+            return rows;
+        } catch (error) {
+            console.error('Error in getting most passages for date and company:', error.message);
             throw error;
         }
     }

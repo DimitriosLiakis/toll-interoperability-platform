@@ -10,7 +10,6 @@ const forecast_controller = async (req, res, next) => {
         const { company_id, date } = req.params;
         const formatQuery = req.query.format || 'json';
 
-        // Validate required parameters
         if (!company_id || !date) {
             return res.status(400).json({ error: 'Missing required parameters' });
         }
@@ -34,7 +33,6 @@ const forecast_controller = async (req, res, next) => {
         if (!fs.existsSync(folderPath)) {
             fs.mkdirSync(folderPath, { recursive: true }); // Create folder if it doesn't exist
         }
-
         const csvData = json2csv(tollData);
         const filePath = path.join(folderPath, `company_${company_id}_passages.csv`);
 
@@ -61,7 +59,7 @@ async function makePassagePrediction(company_id, res, formatQuery, inputCsvPath)
         const dict_id_input = ['AM', 'EG', 'GE', 'KO', 'MO', 'NAO', 'NO', 'OO'];
 
         const modelFileMapping = dict_id_input.reduce((map, companyId) => {
-            const modelFolderPath = path.join(__dirname, '../models');
+            const modelFolderPath = path.join(__dirname, '../models_passages');
             if (!fs.existsSync(modelFolderPath)) {
                 fs.mkdirSync(modelFolderPath, { recursive: true });
             }
