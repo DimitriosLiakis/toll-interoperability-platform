@@ -13,7 +13,7 @@ program
   .version('1.0.0');
 
 
-const BASE_URL = 'http://localhost:9115/api/'; // May need some changes
+const BASE_URL = 'http://localhost:9115/'; // May need some changes
 
 // Path to user storage and token file
 const usersPath = path.resolve(__dirname, 'users.json');
@@ -48,6 +48,14 @@ const loadUsers = () => {
       console.error('Error parsing users.json:', error.message);
       process.exit(1);
     }
+};
+
+// Helper function to ensure the user has admin privileges
+const ensureAdminRole = () => {
+  const currentUser = getCurrentUser();
+  if (currentUser.role !== 'admin') {
+    throw new LogicalError('You do not have permission to execute this command. Admin privileges are required.');
+  }
 };
 
 program
@@ -101,57 +109,46 @@ const adminCommand = program
 
 // **Admin Subcommand: usermod**
 adminCommand
-.command('usermod')
-.description('Create or modify a user')
-.requiredOption('--username <username>', 'Username for the new user')
-.requiredOption('--passw <password>', 'Password for the new user')
-.action(async (options) => {
-  const { username, passw } = options;
-
-  // Example API call for usermod
-  const currentUser = getCurrentUser();
-  const headers = { Authorization: `Bearer ${currentUser.token}` };
-
-  const data = { username, password: passw };
-
-  const result = await callApi('/admin/usermod', 'POST', data, headers);
-  console.log(`User ${username} created or updated successfully.`);
-});
+  .command('usermod')
+  .description('Create or modify a user')
+  .requiredOption('--username <username>', 'Username for the new user')
+  .requiredOption('--passw <password>', 'Password for the new user')
+  .action(async (options) => {
+    ensureAdminRole(); // Ensure the user is an admin
+    const currentUser = getCurrentUser();
+    const headers = { Authorization: `Bearer ${currentUser.token}` };
+    await callApi('/admin/usermod', 'POST', options, headers);
+    console.log(`User ${options.username} created or updated successfully.`);
+  });
 
 // **Admin Subcommand: users**
 adminCommand
-.command('users')
-.description('List all users')
-.action(async () => {
-  const currentUser = getCurrentUser();
-  const headers = { Authorization: `Bearer ${currentUser.token}` };
-
-  const result = await callApi('/admin/users', 'GET', null, headers);
-  console.log('List of users:');
-  console.log(result);
-});
+  .command('users')
+  .description('List all users')
+  .action(async () => {
+    ensureAdminRole(); // Ensure the user is an admin
+    const currentUser = getCurrentUser();
+    const headers = { Authorization: `Bearer ${currentUser.token}` };
+    const result = await callApi('/admin/users', 'GET', null, headers);
+    console.log('List of users:', result);
+  });
 
 // **Admin Subcommand: addpasses**
 adminCommand
-.command('addpasses')
-.description('Add new passes from a CSV file')
-.requiredOption('--source <source>', 'Source CSV file for new passes')
-.action(async (options) => {
-  const { source } = options;
-
-  if (!fs.existsSync(source)) {
-    console.error(`Error: File ${source} does not exist.`);
-    process.exit(1);
-  }
-
-  const currentUser = getCurrentUser();
-  const headers = { Authorization: `Bearer ${currentUser.token}` };
-
-  const csvData = fs.readFileSync(source, 'utf8');
-
-  const result = await callApi('/admin/addpasses', 'POST', { csv: csvData }, headers);
-  console.log(`Passes from ${source} uploaded successfully.`);
-});
+  .command('addpasses')
+  .description('Add new passes from a CSV file')
+  .requiredOption('--source <source>', 'Source CSV file for new passes')
+  .action(async (options) => {
+    ensureAdminRole(); // Ensure the user is an admin
+    if (!fs.existsSync(options.source)) {
+      throw new LogicalError(`File ${options.source} does not exist.`);
+    }
+    const currentUser = getCurrentUser();
+    const headers = { Authorization: `Bearer ${currentUser.token}` };
+    const csvData = fs.readFileSync(options.source, 'utf8');
+    await callApi('/admin/addpasses', 'POST', { csv: csvData }, headers);
+    console.log(`Passes from ${options.source} uploaded successfully.`);
+  });
 
 // Scope: healthcheck
 program
