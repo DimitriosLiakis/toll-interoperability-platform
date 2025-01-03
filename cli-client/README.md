@@ -1,111 +1,190 @@
-# CLI client
+# **se2414 CLI Client**
 
-Base of the CLI README.md , will be updated in accordance to our requirements.
-## Table of Contents
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Environment Configuration](#environment-configuration)
-- [Commands](#commands)
-- [Usage Examples](#usage-examples)
-- [Testing](#testing)
+Το **se2414 CLI Client** είναι ένα εργαλείο γραμμής εντολών που επιτρέπει στους χρήστες να αλληλεπιδρούν με το **API του Softeng24-14**. Παρέχει δυνατότητες **CRUD λειτουργιών** μέσω endpoints REST API, με χαρακτηριστικά όπως **πιστοποίηση χρηστών**, **έλεγχος πρόσβασης βάσει ρόλων** και **καθαρή μορφοποίηση δεδομένων**. Το CLI προσφέρει έναν ασφαλή και φιλικό προς τον χρήστη τρόπο προβολής και διαχείρισης δεδομένων διοδίων.
 
-## Features
-- Perform CRUD operations via REST API endpoints
-- Cleanly formatted table output for data
-- Secure environment variable handling
-- Command validation and error handling
-- Modular code structure
+---
 
-## Requirements
-- **Node.js** (version 12 or higher)
-- **npm** (Node Package Manager)
+## **📚 Πίνακας Περιεχομένων**
+- [Χαρακτηριστικά](#χαρακτηριστικά)
+- [Εγκατάσταση](#εγκατάσταση)
+- [Πιστοποίηση](#πιστοποίηση)
+- [Χρήση](#χρήση)
+  - [Σύνδεση](#σύνδεση)
+  - [Αποσύνδεση](#αποσύνδεση)
+  - [Ποιος είμαι (whoami)](#ποιος-είμαι-whoami)
+  - [Διελεύσεις σταθμών διοδίων](#διελεύσεις-σταθμών-διοδίων)
+  - [Ανάλυση διελεύσεων](#ανάλυση-διελεύσεων)
+  - [Κόστος διελεύσεων](#κόστος-διελεύσεων)
+  - [Χρεώσεις ανά φορέα](#χρεώσεις-ανά-φορέα)
+- [Διαχειριστικές Λειτουργίες](#διαχειριστικές-λειτουργίες)
+  - [usermod](#usermod)
+  - [users](#users)
+  - [addpasses](#addpasses)
+- [Ρόλοι χρηστών](#ρόλοι-χρηστών)
+- [Διαχείριση Σφαλμάτων](#διαχείριση-σφαλμάτων)
+- [Δομή Αρχείων](#δομή-αρχείων)
 
-## Installation
+---
 
-1. **Clone the repository**:
-    ```bash
-    git clone https://github.com/your-username/my-cli-project.git
-    cd my-cli-project
-    ```
+## **✨ Χαρακτηριστικά**
+- **CRUD λειτουργίες** μέσω endpoints του REST API.
+- **Έλεγχος πρόσβασης με ρόλους** για **διαχειριστές** και **χρήστες εταιρειών διοδίων**.
+- **Σύστημα πιστοποίησης** με λειτουργίες σύνδεσης/αποσύνδεσης.
+- **Περιορισμός πολλαπλών συνδέσεων** — πρέπει να αποσυνδεθείτε για να συνδεθείτε με νέο χρήστη.
+- **Εμφάνιση τρέχοντος χρήστη** με την εντολή **whoami**.
+- **Καθαρή μορφοποίηση εξόδου** για δεδομένα.
+- **Επαλήθευση εντολών και χειρισμός σφαλμάτων** για εσφαλμένα ή ελλιπή δεδομένα.
+- **Ασφαλής αποθήκευση των διαπιστευτηρίων** μέσω του αρχείου `token.json`.
 
-2. **Install dependencies**:
-    ```bash
-    npm install
-    ```
+---
 
-3. **Link the CLI** (for local development):
-    ```bash
-    npm link
-    ```
+## **📦 Εγκατάσταση**
+Ακολουθήστε τα παρακάτω βήματα για να ρυθμίσετε και να χρησιμοποιήσετε το **se2414 CLI Client**.
 
-## Environment Configuration
-To configure the CLI, create a `.env` file in the project root with your API details:
+1. **Κλωνοποίηση του αποθετηρίου**
+   ```bash
+   git clone https://github.com/ntua/softeng24-14.git
+   ```
 
-```plaintext
-API_BASE_URL=https://api.example.com
-API_KEY=your-api-key
-```
+2. **Πλοήγηση στον κατάλογο του CLI**
+   ```bash
+   cd softeng24-14/cli-client
+   ```
 
-- `API_BASE_URL`: The base URL of your REST API.
-- `API_KEY`: Your API authentication key, if required by the server.
+3. **Εγκατάσταση εξαρτήσεων**
+   ```bash
+   npm install
+   ```
 
-## Commands
+4. **Σύνδεση του CLI παγκοσμίως**
+   ```bash
+   npm link
+   ```
 
-### 1. **Get Data**: `my-cli get <endpoint>`
-   - Fetches and displays data from the specified API endpoint.
-   - **Example**: `my-cli get users`
-   - **Usage**: Fetches all user data and displays it in a table format.
+> **Σημείωση:** Με το link, μπορείτε να χρησιμοποιείτε την εντολή `se2414` από οπουδήποτε στο σύστημά σας.
 
-### 2. **Create Data**: `my-cli post <endpoint> <data>`
-   - Sends a POST request with data to the specified endpoint.
-   - **Example**: `my-cli post users '{"name": "Alice", "email": "alice@example.com"}'`
-   - **Usage**: Creates a new user with the given data (name and email).
+5. **Επαλήθευση εγκατάστασης**
+   ```bash
+   se2414 --help
+   ```
 
-### 3. **Update Data**: `my-cli update <endpoint> <id> <data>`
-   - Sends a PUT request to update data at a specific endpoint by ID.
-   - **Example**: `my-cli update users 123 '{"email": "alice_updated@example.com"}'`
-   - **Usage**: Updates the email of the user with ID `123`.
+---
 
-### 4. **Delete Data**: `my-cli delete <endpoint> <id>`
-   - Sends a DELETE request to remove data by ID from a specific endpoint.
-   - **Example**: `my-cli delete users 123`
-   - **Usage**: Deletes the user with ID `123` from the users endpoint.
+## **🔐 Πιστοποίηση**
+Για να χρησιμοποιήσετε το CLI, πρέπει πρώτα να **συνδεθείτε**. Το σύστημα υποστηρίζει τους παρακάτω χρήστες:
+- **Διαχειριστής (Admin)**: Έχει πρόσβαση σε όλες τις εντολές.
+- **Χρήστες εταιρειών διοδίων**: Μπορούν να δουν μόνο τα δεδομένα της δικής τους εταιρείας.
 
-## Usage Examples
+---
 
-### Fetching Data
-To retrieve data from an endpoint (e.g., users):
+## **🚀 Χρήση**
+
+### **1. Σύνδεση**
 ```bash
-my-cli get users
+se2414 login --username <όνομα_χρήστη> --passw <κωδικός>
 ```
-This command fetches all users and displays them in a tabular format.
 
-### Creating Data
-To create a new record in the API (e.g., a new user):
+Αν είστε ήδη συνδεδεμένοι ως κάποιος χρήστης, θα πρέπει να αποσυνδεθείτε πρώτα:
+```
+You are already logged in as 'admin'. Please logout before logging in as a new user.
+```
+
+---
+
+### **2. Αποσύνδεση**
 ```bash
-my-cli post users '{"name": "Alice", "email": "alice@example.com"}'
+se2414 logout
 ```
-This command creates a new user with the provided name and email.
 
-### Updating Data
-To update an existing record (e.g., updating a user’s email):
+Αφαιρεί το **token.json** και αποσυνδέει τον χρήστη.
+
+---
+
+### **3. Ποιος είμαι (whoami)**
 ```bash
-my-cli update users 123 '{"email": "alice_updated@example.com"}'
+se2414 whoami
 ```
-This command updates the email for the user with ID `123`.
 
-### Deleting Data
-To delete a specific record by ID (e.g., deleting a user):
+Εμφανίζει το όνομα, την εταιρεία και το ρόλο του συνδεδεμένου χρήστη.
+
+---
+
+### **4. Διελεύσεις σταθμών διοδίων**
 ```bash
-my-cli delete users 123
+se2414 tollstationpasses --station <σταθμός> --from <ημερομηνία> --to <ημερομηνία> --format <μορφή>
 ```
-This command removes the user with ID `123` from the database.
 
-## Testing
+---
 
-To run tests for the CLI, use the following command:
+### **5. Ανάλυση διελεύσεων**
 ```bash
-npx mocha test/cli.test.js
+se2414 passanalysis --stationop <φορέας_1> --tagop <φορέας_2> --from <ημερομηνία> --to <ημερομηνία>
 ```
-This command runs all tests defined in the `test/cli.test.js` file to ensure that the CLI commands work as expected.
+
+---
+
+### **6. Κόστος διελεύσεων**
+```bash
+se2414 passescost --stationop <φορέας_1> --tagop <φορέας_2> --from <ημερομηνία> --to <ημερομηνία>
+```
+
+---
+
+### **7. Χρεώσεις ανά φορέα**
+```bash
+se2414 chargesby --opid <id_φορέα> --from <ημερομηνία> --to <ημερομηνία>
+```
+
+---
+
+## **⚙️ Διαχειριστικές Λειτουργίες**
+
+### **1. usermod**
+```bash
+se2414 admin usermod --username <όνομα_χρήστη> --passw <κωδικός>
+```
+Δημιουργεί ή ενημερώνει έναν χρήστη.
+
+---
+
+### **2. users**
+```bash
+se2414 admin users
+```
+Εμφανίζει τη λίστα όλων των χρηστών.
+
+---
+
+### **3. addpasses**
+```bash
+se2414 admin addpasses --source <αρχείο_διελεύσεων.csv>
+```
+Προσθέτει διελεύσεις διοδίων από αρχείο CSV.
+
+---
+
+## **👥 Ρόλοι χρηστών**
+| **Όνομα Χρήστη**  | **Εταιρεία**        | **Ρόλος** |
+|-------------------|---------------------|-----------|
+| **admin**         | -                   | **admin** |
+| **aegean_user**   | **aegean_motorway** | **user**  |
+| **egnatia_user**  | **egnatia_odos**    | **user**  |
+| **kentriki_user** | **kentriki_odos**   | **user**  |
+| **moreas_user**   | **moreas**          | **user**  |
+| **attiki_user**   | **attiki_odos**     | **user**  |
+| **nea_user**      | **nea_odos**        | **user**  |
+| **olympia_user**  | **olympia_odos**    | **user**  |
+
+Οι χρήστες των εταιρειών μπορούν να βλέπουν μόνο δεδομένα της εταιρείας τους. Ο διαχειριστής (**admin**) έχει πρόσβαση σε όλα τα δεδομένα.
+
+---
+
+## **📁 Δομή Αρχείων**
+```
+project/
+  ├── cli-client/
+  │    └── cli.js
+  │    └── users.json
+  │    └── token.json (Αυτόματη δημιουργία)
+  └── package.json
+```

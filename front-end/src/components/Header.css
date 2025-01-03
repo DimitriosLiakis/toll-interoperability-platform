@@ -21,4 +21,20 @@
   nav a.active {
     border-bottom: 2px solid #61dafb;
   }
-  
+  .login-button,
+.logout-button {
+  background-color: #61dafb;
+  color: #282c34;
+  border: none;
+  padding: 8px 16px;
+  margin-left: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 4px;
+  width: 100px;
+}
+
+.login-button:hover,
+.logout-button:hover {
+  background-color: #21a1f1;
+}
