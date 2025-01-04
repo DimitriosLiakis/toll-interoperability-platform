@@ -33,6 +33,10 @@ const getTollStationPasses = async (req, res, next) => {
         let result1 = str1.replace(/\d+/g, ''); // Εξαγωγή του ονόματος του χειριστή της σταθμού
 
         const response = {
+            //user: { 
+             //   username: user.username, // Προσθήκη δεδομένων χρήστη από το token
+               // id: user.id, // Αν υπάρχει ID χρήστη
+            //}, 
             stationID: tollStationID,
             stationOperator: result1,
             requestTimestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),

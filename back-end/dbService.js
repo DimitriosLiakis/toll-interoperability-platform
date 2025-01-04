@@ -215,6 +215,15 @@ class DbService {
         }
     }
     
+    async getUser(user_email){
+        try {
+            const query = `SELECT * FROM users WHERE user_email = ?`;
+            const [rows] = await promisePool.query(query, [user_email]);
+            return rows[0];
+        } catch (error) {
+            console.error('Error in getUser:', error.message);
+        }
+    }
 
     async peak_input_data(company_id, DateFrom, DateTo) {
         try {

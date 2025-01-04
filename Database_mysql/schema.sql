@@ -194,3 +194,11 @@ ALTER TABLE Passages ADD CONSTRAINT same_passage UNIQUE (tollID, tagRef, timesta
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2024-11-14 18:45:46
+
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
+    `user_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `user_email` VARCHAR(255) NOT NULL UNIQUE,
+    `user_password` VARCHAR(255) NOT NULL,
+    `user_role` ENUM("admin","aodos","gefyra","egnatia","kentrikiodos","moreas","neaodos","olympiaodos") NOT NULL 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
