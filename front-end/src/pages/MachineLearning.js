@@ -27,7 +27,18 @@ const formatToDateOnly = (dateTimeString) => {
   return `${day}/${month}/${year}`;
 };
 
+// Helper function to convert time (e.g., "09:08") to minutes since midnight
+const timeToMinutes = (time) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
 
+// Helper function to convert minutes since midnight back to 24-hour format
+const minutesToTime = (minutes) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+};
 
 
 // Full toll name mapping
@@ -285,9 +296,7 @@ const tollNameMapping = {
   OO26: "Σταθμός Διοδίων Ζευγολατιού Πλευρικά (Προς Αθήνα)",
   OO27: "Σταθμός Διοδίων Κιάτου Πλευρικά (Από Πάτρα)",
   OO28: "Σταθμός Διοδίων Κιάτου Πλευρικά (Προς Πάτρα)",
-};
-
-export default function MLDashboard() {
+};export default function MLDashboard() {
   const [loading, setLoading] = useState(false);
   const [trainingStatus, setTrainingStatus] = useState('');
   const [error, setError] = useState('');
@@ -296,6 +305,7 @@ export default function MLDashboard() {
   const [selectedCompany, setSelectedCompany] = useState('AM');
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
   const [forecastDate, setForecastDate] = useState('');
+  const [selectedFunctionality, setSelectedFunctionality] = useState('');
 
   const companies = [
     { value: 'AM', label: 'Αυτοκινητόδρομος Αιγαίου' },
@@ -307,7 +317,12 @@ export default function MLDashboard() {
     { value: 'OO', label: 'Ολυμπία Οδός' },
     { value: 'GE', label: 'Γέφυρα' },
   ];
-  
+
+  const functionalities = [
+    { value: 'predictions', label: 'Πρόβλεψη ώρας αιχμής' },
+    { value: 'forecast', label: 'Πρόβλεψη μέγιστης ροής οχημάτων' },
+  ];
+
   const trainModels = async () => {
     setLoading(true);
     setTrainingStatus('Training models...');
@@ -339,13 +354,15 @@ export default function MLDashboard() {
       );
       if (!response.ok) throw new Error('Failed to fetch predictions');
       const data = await response.json();
-  
+
       // Transform backend response
       const formattedData = data.map((item) => ({
         ...item,
+        passage_date: formatToDateOnly(item.passage_date),
         predicted_hour: formatHourTo24h(item.predicted_hour),
+        predicted_hour_minutes: timeToMinutes(formatHourTo24h(item.predicted_hour)), // Add minutes for chart
       }));
-  
+
       setPredictions(formattedData);
     } catch (err) {
       setError('Failed to get predictions: ' + err.message);
@@ -353,7 +370,6 @@ export default function MLDashboard() {
       setLoading(false);
     }
   };
-  
 
   const getForecast = async () => {
     if (!forecastDate) {
@@ -402,7 +418,7 @@ export default function MLDashboard() {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Προβλέψεις Κυκλοφορίας </h1>
+      <h1 className="text-3xl font-bold mb-6">Προβλέψεις Κυκλοφορίας</h1>
 
       <div className="mb-8 p-6 border rounded bg-white">
         <h2 className="text-xl font-bold mb-4">Εκπαίδευση Μοντέλων</h2>
@@ -421,130 +437,172 @@ export default function MLDashboard() {
       </div>
 
       <div className="p-6 border rounded bg-white">
-        <h2 className="text-xl font-bold mb-4">Πρόβλεψη ώρας αιχμής</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Εταιρεία</label>
-            <select
-  value={selectedCompany}
-  onChange={(e) => setSelectedCompany(e.target.value)}
-  className="w-full p-2 border rounded"
->
-  {companies.map((company) => (
-    <option key={company.value} value={company.value}>
-      {company.label} {/* Use company.label here */}
-    </option>
-  ))}
-</select>
-
-          </div>
-          <div className="date-inputs">
-            <div>
-              <label className="block text-sm font-medium mb-1">Από</label>
-              <ReactDatePicker
-                selected={dateRange.from ? new Date(dateRange.from) : null}
-                onChange={(date) => handleDatePickerChange('from', date)}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="dd/mm/yyyy"
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Έως</label>
-              <ReactDatePicker
-                selected={dateRange.to ? new Date(dateRange.to) : null}
-                onChange={(date) => handleDatePickerChange('to', date)}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="dd/mm/yyyy"
-                className="w-full p-2 border rounded"
-              />
-            </div>
-          </div>
+        <h2 className="text-xl font-bold mb-4">Επιλογή Πρόβλεψης</h2>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Προβλέψεις</label>
+          <select
+            value={selectedFunctionality}
+            onChange={(e) => setSelectedFunctionality(e.target.value)}
+            className="w-full p-2 border rounded"
+          >
+            <option value="">Επιλέξτε πρόβλεψη</option>
+            {functionalities.map((func) => (
+              <option key={func.value} value={func.value}>
+                {func.label}
+              </option>
+            ))}
+          </select>
         </div>
-        <button
-          onClick={getPredictions}
-          disabled={loading}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
-        >
-          {loading ? 'Γίνεται πρόβλεψη...' : 'Αποτελέσματα πρόβλεψης'}
-        </button>
+
+        {selectedFunctionality === 'predictions' && (
+          <>
+            <h2 className="text-xl font-bold mb-4">Πρόβλεψη ώρας αιχμής</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Εταιρεία</label>
+                <select
+                  value={selectedCompany}
+                  onChange={(e) => setSelectedCompany(e.target.value)}
+                  className="w-full p-2 border rounded"
+                >
+                  {companies.map((company) => (
+                    <option key={company.value} value={company.value}>
+                      {company.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="date-inputs">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Από</label>
+                  <ReactDatePicker
+                    selected={dateRange.from ? new Date(dateRange.from) : null}
+                    onChange={(date) => handleDatePickerChange('from', date)}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="dd/mm/yyyy"
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Έως</label>
+                  <ReactDatePicker
+                    selected={dateRange.to ? new Date(dateRange.to) : null}
+                    onChange={(date) => handleDatePickerChange('to', date)}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="dd/mm/yyyy"
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={getPredictions}
+              disabled={loading}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
+            >
+              {loading ? 'Γίνεται πρόβλεψη...' : 'Αποτελέσματα πρόβλεψης'}
+            </button>
+          </>
+        )}
+
+        {selectedFunctionality === 'forecast' && (
+          <>
+            <h2 className="text-xl font-bold mb-4">Πρόβλεψη μέγιστης ροής οχημάτων</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Εταιρεία</label>
+                <select
+                  value={selectedCompany}
+                  onChange={(e) => setSelectedCompany(e.target.value)}
+                  className="w-full p-2 border rounded"
+                >
+                  {companies.map((company) => (
+                    <option key={company.value} value={company.value}>
+                      {company.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Ημερομηνία</label>
+                <ReactDatePicker
+                  selected={forecastDate ? new Date(forecastDate) : null}
+                  onChange={handleForecastDateChange}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="dd/mm/yyyy"
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+            </div>
+            <button
+              onClick={getForecast}
+              disabled={loading}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+            >
+              {loading ? 'Γίνεται πρόβλεψη...' : 'Αποτελέσματα πρόβλεψης'}
+            </button>
+          </>
+        )}
+
         {error && (
           <div className="mt-4 p-4 bg-red-100 border border-red-400 rounded text-red-700">
             {error}
           </div>
         )}
-        {predictions.length > 0 && (
-  <div className="mt-6">
-    <h3 className="text-lg font-bold mb-4">Αποτελέσματα πρόβλεψης</h3>
-    <table className="table-auto w-full border-collapse border border-gray-200 text-left">
-      <thead>
-        <tr className="bg-gray-100">
-          <th className="border border-gray-200 px-4 py-2">Ημερομηνία</th>
-          <th className="border border-gray-200 px-4 py-2">Προβλεπόμενη Ώρα Αιχμής</th>
-        </tr>
-      </thead>
-      <tbody>
-        {predictions.map((entry, index) => (
-          <tr key={index} className="hover:bg-gray-50">
-            <td className="border border-gray-200 px-4 py-2">
-              {formatToDateOnly(entry.passage_date)}
-            </td>
-            <td className="border border-gray-200 px-4 py-2">{entry.predicted_hour}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-)}
 
+        {predictions.length > 0 && selectedFunctionality === 'predictions' && (
+          <div className="mt-6">
+            <h3 className="text-lg font-bold mb-4">Αποτελέσματα πρόβλεψης</h3>
+            <table className="table-auto w-full border-collapse border border-gray-200 text-left">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-200 px-4 py-2">Ημερομηνία</th>
+                  <th className="border border-gray-200 px-4 py-2">Προβλεπόμενη Ώρα Αιχμής</th>
+                </tr>
+              </thead>
+              <tbody>
+                {predictions.map((entry, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="border border-gray-200 px-4 py-2">{entry.passage_date}</td>
+                    <td className="border border-gray-200 px-4 py-2">{entry.predicted_hour}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
+            {/* Chart for Predictions */}
+            <div className="mt-6">
+              <LineChart width={800} height={400} data={predictions}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="passage_date" />
+                <YAxis
+                  domain={[0, 1440]} // Set Y-axis range to 0–1440 minutes (24 hours)
+                  tickFormatter={minutesToTime} // Format ticks as 24-hour time
+                />
+                <Tooltip
+                  formatter={(value) => minutesToTime(value)} // Format tooltip as 24-hour time
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="predicted_hour_minutes"
+                  stroke="#10B981"
+                  name="Προβλεπόμενη Ώρα Αιχμής"
+                />
+              </LineChart>
+            </div>
 
-
-
-      </div>
-
-      <div className="p-6 border rounded bg-white mt-8">
-        <h2 className="text-xl font-bold mb-4">Πρόβλεψη μέγιστης ροής οχημάτων</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Εταιρεία</label>
-            <select
-  value={selectedCompany}
-  onChange={(e) => setSelectedCompany(e.target.value)}
-  className="w-full p-2 border rounded"
->
-  {companies.map((company) => (
-    <option key={company.value} value={company.value}>
-      {company.label} {/* Use company.label here */}
-    </option>
-  ))}
-</select>
-
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Ημερομηνία</label>
-            <ReactDatePicker
-              selected={forecastDate ? new Date(forecastDate) : null}
-              onChange={handleForecastDateChange}
-              dateFormat="dd/MM/yyyy"
-              placeholderText="dd/mm/yyyy"
-              className="w-full p-2 border rounded"
-            />
-          </div>
-        </div>
-        <button
-          onClick={getForecast}
-          disabled={loading}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
-        >
-          {loading ? 'Getting Forecast...' : 'Get Forecast'}
-        </button>
-        {error && (
-          <div className="mt-4 p-4 bg-red-100 border border-red-400 rounded text-red-700">
-            {error}
+            {/* Disclaimer */}
+            <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded text-yellow-700">
+              <p>
+                <strong>Προσοχή:</strong> Οι προβλέψεις για ημερομηνίες που απέχουν πολύ από την σημερινή
+                ημερομηνία μπορεί να έχουν χαμηλή ακρίβεια.
+              </p>
+            </div>
           </div>
         )}
-        {forecastData.length > 0 && (
+
+        {forecastData.length > 0 && selectedFunctionality === 'forecast' && (
           <div className="mt-6">
             <h3 className="text-lg font-bold mb-4">
               Forecast Results for {formatDate(forecastDate)}
