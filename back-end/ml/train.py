@@ -28,9 +28,19 @@ data['Month'] = data['date'].dt.month
 data['Day'] = data['date'].dt.day
 data['DayOfYear'] = data['date'].dt.dayofyear
 
-# Encode categorical columns
+# Handle unseen labels by adding an "Unknown" category to the LabelEncoder
 label_encoder = LabelEncoder()
-data['tollID'] = label_encoder.fit_transform(data['tollID'])
+
+# Fit the label encoder on the 'tollID' column
+data['tollID'] = data['tollID'].astype(str)  # Ensure the 'tollID' column is a string
+label_encoder.fit(data['tollID'])
+
+# Add the 'Unknown' category to handle unseen labels
+if 'Unknown' not in label_encoder.classes_:
+    label_encoder.classes_ = list(label_encoder.classes_) + ['Unknown']
+
+# Transform the 'tollID' column using the fitted label encoder
+data['tollID'] = label_encoder.transform(data['tollID'])
 
 # Drop unused columns
 X = data.drop(columns=["total_passages", "date"])
@@ -53,8 +63,13 @@ output_dir = os.path.join(os.path.dirname(__file__), '..', 'models_passages')
 os.makedirs(output_dir, exist_ok=True)  # Create the directory if it doesn't exist
 
 # Save the model
-output_path = os.path.join(output_dir, f"model_{args.company}.pkl")
-with open(output_path, 'wb') as model_file:
+model_path = os.path.join(output_dir, f"model_{args.company}.pkl")
+with open(model_path, 'wb') as model_file:
     pickle.dump(model, model_file)
+print(f'Model saved to {model_path}')
 
-print(f'Model saved to {output_path}')
+# Save the LabelEncoder
+encoder_path = os.path.join(output_dir, f"company_label_encoder_{args.company}.pkl")
+with open(encoder_path, 'wb') as le_file:
+    pickle.dump(label_encoder, le_file)
+print(f'LabelEncoder saved to {encoder_path}')
