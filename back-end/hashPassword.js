@@ -28,7 +28,8 @@ const users = [
   { user_id: 6, user_email: 'admin@kentrikiodos.gr', user_password: 'Kentriki123!', user_session_id: null },
   { user_id: 7, user_email: 'admin@moreas.com.gr', user_password: 'Moreas123!', user_session_id: null },
   { user_id: 8, user_email: 'admin@neaodos.gr', user_password: 'Neaodos123!', user_session_id: null },
-  { user_id: 9, user_email: 'admin@olympiaodos.gr', user_password: 'Olympia123!', user_session_id: null }
+  { user_id: 9, user_email: 'admin@olympiaodos.gr', user_password: 'Olympia123!', user_session_id: null },
+  { user_id: 10, user_email: 'admin@yme.gov.gr', user_password: 'yme123!', user_session_id: null }
 ];
 
 const saltRounds = 10; // Adjust salt rounds for security

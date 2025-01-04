@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv').config();
 
 const dbService = db.getDbServiceInstance();
+
 const authenticate = async (req, res) => {
     const { user_email, user_password } = req.body;    
     if (!user_email || !user_password) {
@@ -12,11 +13,12 @@ const authenticate = async (req, res) => {
 
     try {
         const user = await dbService.getUser(user_email);
-
+        console.log('User fetched:', user); // Debugging
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
         const isMatch = await bcrypt.compare(user_password, user.user_password);
+        console.log('Password match:', isMatch); // Debugging
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid password' });
         }
@@ -26,10 +28,11 @@ const authenticate = async (req, res) => {
             user_email: user.user_email
         };
 
-        const token = jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '1h' });
+        const token = jwt.sign(payload, process.env.SECRET_KEY || 'mySuperSecretKey', { expiresIn: '1h' });
         return res.status(200).json({ message: 'Authentication successful', token });
     } catch (err) {
-        console.error(err);
+        //console.error(err);
+        console.error('Error during authentication:', err); // Debugging
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
