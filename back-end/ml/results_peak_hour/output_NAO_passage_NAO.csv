@@ -1,0 +1,5 @@
+OpID,passage_date,day_of_week,month,year,OpID_encoded,predicted_peak_hour
+NAO,2024-02-01,3,2,2024,0,0
+NAO,2024-02-02,4,2,2024,0,0
+NAO,2024-02-01,3,2,2024,0,0
+NAO,2024-02-02,4,2,2024,0,0

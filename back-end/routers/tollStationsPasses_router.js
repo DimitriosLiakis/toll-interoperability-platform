@@ -1,0 +1,14 @@
+const express = require('express');
+const router = express.Router();
+const controller = require('../controllers/tollStationsPasses_controller');
+
+router.get('/:tollStationID?/:date_from?/:date_to?', (req, res, next) => {
+    const { tollStationID, date_from, date_to } = req.params;
+
+    if (!tollStationID || !date_from || !date_to) {
+        return res.status(400).json({ error: 'Missing required parameters: tollStationID, date_from, date_to' });
+    }
+    next();
+}, controller.getTollStationPasses);
+
+module.exports = router;

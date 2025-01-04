@@ -1,43 +1,85 @@
-const dbService = require('../dbService');
+const { exec } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+const DbService = require('../dbService.js'); // Database service
+const util = require('util');
+
+// Promisify the exec function for easier use with async/await
+const execPromise = util.promisify(exec);
 
 const passing_toll = async (req, res) => {
-    const { tranid, tollid } = req.body; // Accept the input from the request body
-    const db = dbService.getDbServiceInstance();
+    // Define the upload directory
+    const uploadDir = path.join(__dirname, '../uploads');
+    const filename = 'passages.csv';
+    const csvFilePath = path.join(uploadDir, filename);
 
-    // Validate input
-    if (!tranid || !tollid) {
-        console.log("An identifier (transceiver_id) and toll_id must be provided");
-        return res.status(400).send('An identifier (transceiver_id) and toll_id must be provided');
+    const scriptDir = path.join(__dirname, '../scripts');
+    const script_name = 'passage2mysql.py';
+    const python_path = path.join(scriptDir, script_name);
+
+    // Check if the file exists
+    if (!fs.existsSync(csvFilePath)) {
+        return res.status(400).json({ error: 'File not found in uploads directory.' }); // 400 Bad Request
     }
 
-    // Check if tranid is a number
-    if (isNaN(tranid)) {
-        console.log("The identifier (transceiver_id) must be an integer");
-        return res.status(400).send('The identifier (transceiver_id) must be an integer');
-    }
+    // Escape special characters in the path (optional, for safety)
+    const escapedFilePath = csvFilePath.replace(/(["\s'$`\\])/g, '\\$1');
+    const python_escaped = python_path.replace(/(["\s'$`\\])/g, '\\$1');
 
-    // Check if tollid is a number
-    if (isNaN(tollid)) {
-        console.log("The identifier (tollid) must be an integer");
-        return res.status(400).send('The identifier (tollid) must be an integer');
-    }
-
-    const transceiverId = parseInt(tranid, 10);
-    const tollId = parseInt(tollid, 10); // Corrected to use 10 as the radix
-
+    // Use the DbService to access the database
+    const dbService = DbService.getDbServiceInstance();
     try {
-        const result = await db.passing_toll(transceiverId, tollId); // Await the database call
+        console.log('Testing database connection...');
+        const lastPassageId = await dbService.getLastPassageId();
+        console.log('Database connection test successful. Last passage ID:', lastPassageId);
 
-        // Check if result is empty
-        if (!result) {
-            return res.status(404).send('Transceiver not found or no action taken');
+        console.log("Let's get the p_id");
+        const lastPId_before = lastPassageId; // Store the last passage ID before running the script
+
+        // Run the Python script
+        console.log('Running Python script...');
+        const { stdout, stderr } = await execPromise(
+            `python3 "${python_escaped}" "${escapedFilePath}"`
+        );
+
+        console.log('Python script executed successfully.');
+
+        // Fetch the new records added since the last passage ID
+        const newRecords = await dbService.getRecordsBetweenIds(lastPId_before);
+        const lastPId_after = await dbService.getLastPassageId();
+
+        // If no new records found
+        if (newRecords.length === 0) {
+            return res.status(404).json({ error: 'No new records found after last passage.' }); // 404 Not Found
         }
-        
-        // Respond with the data
-        res.json({ data: result });
-    } catch (err) {
-        console.error(err);
-        return res.status(500).send('An error occurred while processing the request');
+
+        // Determine response format
+        const format = req.query.format || 'json';
+
+        if (format === 'csv') {
+            // Convert records to CSV format
+            const csvHeaders = Object.keys(newRecords[0] || {}).join(',');
+            const csvRows = newRecords.map(record =>
+                Object.values(record).join(',')
+            );
+            const csvData = [csvHeaders, ...csvRows].join('\n');
+
+            res.setHeader('Content-Type', 'text/csv');
+            res.attachment('new_records.csv');
+            return res.send(csvData);
+        }
+
+        // Default response as JSON
+        res.status(200).json({
+            message: stdout.trim(),
+            lastPId_before,
+            lastPId_after,
+            insertedRecords: newRecords,
+        });
+    } catch (error) {
+        // Handle errors in running the Python script or fetching records
+        console.error('Error:', error.message || error.stderr || 'Unknown error.');
+        res.status(500).json({ error: error.message || 'An unexpected error occurred.' }); // 500 Internal Server Error
     }
 };
 
