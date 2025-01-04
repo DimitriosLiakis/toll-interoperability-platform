@@ -6,13 +6,14 @@ import './PassAnalysis.css';
 
 const PassAnalysis = () => {
     const operationOptions = [
-        { value: 'AM', label: 'AM - Aegean Motorway' },
-        { value: 'EG', label: 'EG - Egnatia' },
-        { value: 'KO', label: 'KO - Kentrikiodos' },
-        { value: 'MO', label: 'MO - Moreas' },
-        { value: 'NAO', label: 'NAO - Naodos' },
-        { value: 'NO', label: 'NO - Neaodos' },
-        { value: 'OO', label: 'OO - Olympiaodos' },
+        { value: 'AM', label: 'Αυτοκινητόδρομος Αιγαίου' },
+        { value: 'EG', label: 'Εγνατία Οδός' },
+        { value: 'KO', label: 'Κεντρική Οδός' },
+        { value: 'MO', label: 'Μορέας' },
+        { value: 'NAO', label: 'Αττική Οδός' },
+        { value: 'NO', label: 'Νέα Οδός' },
+        { value: 'OO', label: 'Ολυμπία Οδός' },
+        { value: 'GE', label: 'Γέφυρα' },
     ];
 
     const [stationOpID, setStationOpID] = useState('');
@@ -42,7 +43,7 @@ const PassAnalysis = () => {
         setLoading(true);
 
         if (!stationOpID || !tagOpID || !dateFrom || !dateTo) {
-            setError('All fields are required.');
+            setError('Όλα τα πεδία είναι υποχρεωτικά.');
             setLoading(false);
             return;
         }
@@ -52,7 +53,7 @@ const PassAnalysis = () => {
 
         const dateRegex = /^\d{8}$/;
         if (!dateRegex.test(formattedDateFrom) || !dateRegex.test(formattedDateTo)) {
-            setError('Dates must be in YYYYMMDD format.');
+            setError('Οι ημερομηνίες πρέπει να είναι στη μορφή YYYYMMDD.');
             setLoading(false);
             return;
         }
@@ -73,11 +74,11 @@ const PassAnalysis = () => {
                     const csvUrl = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
                     setCsvData(csvUrl);
                 } else {
-                    setError('Unexpected CSV data format.');
+                    setError('Μη αναμενόμενη μορφή δεδομένων CSV.');
                 }
             }
         } catch (err) {
-            setError(err.response?.data?.error || 'An error occurred while fetching data.');
+            setError(err.response?.data?.error || 'Προέκυψε σφάλμα κατά την ανάκτηση των δεδομένων.');
         } finally {
             setLoading(false);
         }
@@ -85,16 +86,16 @@ const PassAnalysis = () => {
 
     return (
         <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-            <h2>Pass Analysis</h2>
+            <h2>Ανάλυση Περασμάτων</h2>
             <form onSubmit={handleSubmit}>
                 <div>
-                    <label>Station Operation ID:</label>
+                    <label>Κωδικός Λειτουργού Σταθμού:</label>
                     <select
                         value={stationOpID}
                         onChange={(e) => setStationOpID(e.target.value)}
                         required
                     >
-                        <option value="">-- Select Station Operation ID --</option>
+                        <option value="">-- Επιλέξτε Σταθμό --</option>
                         {operationOptions.map((option) => (
                             <option key={option.value} value={option.value}>
                                 {option.label}
@@ -104,13 +105,13 @@ const PassAnalysis = () => {
                 </div>
 
                 <div>
-                    <label>Tag Operation ID:</label>
+                    <label>Κωδικός Παρόχου Ετικέτας:</label>
                     <select
                         value={tagOpID}
                         onChange={(e) => setTagOpID(e.target.value)}
                         required
                     >
-                        <option value="">-- Select Tag Operation ID --</option>
+                        <option value="">-- Επιλέξτε Ετικέτα --</option>
                         {operationOptions.map((option) => (
                             <option key={option.value} value={option.value}>
                                 {option.label}
@@ -120,7 +121,7 @@ const PassAnalysis = () => {
                 </div>
 
                 <div>
-                    <label>Date From:</label>
+                    <label>Ημερομηνία Από:</label>
                     <input
                         type="date"
                         value={dateFrom}
@@ -130,7 +131,7 @@ const PassAnalysis = () => {
                 </div>
 
                 <div>
-                    <label>Date To:</label>
+                    <label>Ημερομηνία Έως:</label>
                     <input
                         type="date"
                         value={dateTo}
@@ -140,7 +141,7 @@ const PassAnalysis = () => {
                 </div>
 
                 <div>
-                    <label>Format:</label>
+                    <label>Μορφή:</label>
                     <select value={format} onChange={(e) => setFormat(e.target.value)}>
                         <option value="json">JSON</option>
                         <option value="csv">CSV</option>
@@ -148,7 +149,7 @@ const PassAnalysis = () => {
                 </div>
 
                 <button type="submit" disabled={loading}>
-                    {loading ? 'Fetching...' : 'Fetch Data'}
+                    {loading ? 'Φόρτωση...' : 'Εμφάνιση Δεδομένων'}
                 </button>
             </form>
 
@@ -156,23 +157,23 @@ const PassAnalysis = () => {
 
             {format === 'json' && data && (
                 <div>
-                    <h3>Pass Analysis Data</h3>
-                    <p><strong>StationOpID:</strong> {data.stationOpID}</p>
-                    <p><strong>TagOpID:</strong> {data.tagOpID}</p>
-                    <p><strong>Request Timestamp:</strong> {data.requestTimestamp}</p>
-                    <p><strong>Period From:</strong> {data.periodFrom}</p>
-                    <p><strong>Period To:</strong> {data.periodTo}</p>
-                    <p><strong>Number of Passes:</strong> {data.nPasses}</p>
+                    <h3>Δεδομένα Ανάλυσης Περασμάτων</h3>
+                    <p><strong> ID Λειτουργού Σταθμού:</strong> {data.stationOpID}</p>
+                    <p><strong>ID Παρόχου Ετικέτας:</strong> {data.tagOpID}</p>
+                    <p><strong>Χρονική Σήμανση Αιτήματος:</strong> {data.requestTimestamp}</p>
+                    <p><strong>Περίοδος Από:</strong> {data.periodFrom}</p>
+                    <p><strong>Περίοδος Έως:</strong> {data.periodTo}</p>
+                    <p><strong>Αριθμός Διελεύσεων:</strong> {data.nPasses}</p>
                     {Array.isArray(data.passList) && data.passList.length > 0 ? (
                         <table border="1" cellPadding="5" cellSpacing="0">
                             <thead>
                                 <tr>
-                                    <th>Pass Index</th>
-                                    <th>Pass ID</th>
-                                    <th>Station ID</th>
-                                    <th>Timestamp</th>
-                                    <th>Tag ID</th>
-                                    <th>Pass Charge</th>
+                                    <th>Δείκτης Διέλευσης</th>
+                                    <th>Κωδικός Διέλευσης</th>
+                                    <th>Κωδικός Σταθμού</th>
+                                    <th>Χρονική Σήμανση</th>
+                                    <th>Κωδικός Ετικέτας</th>
+                                    <th>Κόστος Διέλευσης</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -189,16 +190,16 @@ const PassAnalysis = () => {
                             </tbody>
                         </table>
                     ) : (
-                        <p>No pass data available.</p>
+                        <p>Δεν υπάρχουν διαθέσιμα δεδομένα περασμάτων.</p>
                     )}
                 </div>
             )}
 
             {format === 'csv' && csvData && (
                 <div>
-                    <h3>Download CSV</h3>
-                    <a href={csvData} download={`pass_analysis_${stationOpID}_${tagOpID}_${dateFrom}_${dateTo}.csv`}>
-                        Download CSV
+                    <h3>Λήψη CSV</h3>
+                    <a href={csvData} download={`analysis_${stationOpID}_${tagOpID}_${dateFrom}_${dateTo}.csv`}>
+                        Κατεβάστε το CSV
                     </a>
                 </div>
             )}

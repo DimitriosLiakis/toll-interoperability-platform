@@ -1,4 +1,3 @@
-// Map.js
 import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -28,6 +27,18 @@ function Map() {
   const [filters, setFilters] = useState({ operator: "all", name: "" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Operator translation mapping
+  const operatorTranslations = {
+    aegeanmotorway: "Αυτοκινητόδρομος Αιγαίου",
+    egnatia: "Εγνατία Οδός",
+    gefyra: "Γέφυρα",
+    kentrikiodos: "Κεντρική Οδός",
+    moreas: "Μορέας",
+    naodos: "Αττική Οδός",
+    neaodos: "Νέα Οδός",
+    olympiaodos: "Ολυμπία Οδός",
+  };
 
   // Define a custom icon with corrected anchor points
   const customIcon = L.icon({
@@ -91,17 +102,7 @@ function Map() {
   }, []);
 
   // List of operator options
-  const operatorOptions = [
-    "All",
-    "aegeanmotorway",
-    "egnatia",
-    "gefyra",
-    "kentrikiodos",
-    "moreas",
-    "naodos",
-    "neaodos",
-    "olympiaodos",
-  ];
+  const operatorOptions = ["all", ...Object.keys(operatorTranslations)];
 
   // Filter tolls based on user input
   const filteredTolls = tolls.filter((toll) => {
@@ -128,15 +129,17 @@ function Map() {
           `<div class="popup-content">
             <button onclick="this.closest('.leaflet-popup').remove()" class="popup-close">×</button>
             <strong>${toll.name}</strong><br/>
-            <strong>Operator:</strong> ${toll.operator}<br/>
+            <strong>Operator:</strong> ${
+              operatorTranslations[toll.operator] || toll.operator
+            }<br/>
             <strong>Email:</strong> <a href="mailto:${toll.email}">${toll.email}</a><br/>
             <strong>Prices:</strong><br/>
-            ${toll.prices.map((price) => `${price}<br/>`).join('')}
+            ${toll.prices.map((price) => `${price}<br/>`).join("")}
           </div>`,
           {
             closeButton: false, // Disable default close button
             autoPan: true,
-            className: 'custom-popup'
+            className: "custom-popup",
           }
         );
 
@@ -172,10 +175,9 @@ function Map() {
     <div>
       {/* Filter Controls */}
       <div style={{ marginBottom: "20px" }}>
-        <h3>Φίλτρα</h3>
         {/* Operator Filter as Dropdown */}
         <label>
-          Εταιρεία:
+          Διαλέξτε Εταιρεία:
           <select
             name="operator"
             value={filters.operator}
@@ -184,14 +186,16 @@ function Map() {
           >
             {operatorOptions.map((operator) => (
               <option key={operator} value={operator.toLowerCase()}>
-                {operator.charAt(0).toUpperCase() + operator.slice(1)}
+                {operator === "all"
+                  ? "Όλες"
+                  : operatorTranslations[operator] || operator}
               </option>
             ))}
           </select>
         </label>
         {/* Name Filter as Text Input */}
         <label style={{ marginLeft: "20px" }}>
-          Όνομα:
+          Όνομα διοδίου:
           <input
             type="text"
             name="name"

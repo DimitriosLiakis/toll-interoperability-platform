@@ -59,7 +59,7 @@ mse = mean_squared_error(y_test, y_pred)
 print(f'Model trained with MSE: {mse}')
 
 # Ensure the output directory exists
-output_dir = os.path.join(os.path.dirname(__file__), '..', 'models_passages')
+output_dir = os.path.join(os.path.dirname(_file_), '..', 'models_passages')
 os.makedirs(output_dir, exist_ok=True)  # Create the directory if it doesn't exist
 
 # Save the model
