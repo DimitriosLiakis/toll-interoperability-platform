@@ -5,25 +5,48 @@ import mysql.connector
 from mysql.connector import Error
 from dotenv import load_dotenv
 import os
+import csv
+import random
 
 # Load environment variables from .env file
 load_dotenv()
 
-def insert_data(df):
+# Helper function to establish the database connection
+def get_db_connection():
     try:
-        # Database connection using environment variables
         conn = mysql.connector.connect(
             host=os.getenv('HOST'),
             user=os.getenv('DUSER'),
             password=os.getenv('PASSWORD'),
             database=os.getenv('DATABASE')
         )
-        
-        cursor = conn.cursor()
+        return conn
+    except Error as e:
+        print(f"Error connecting to database: {e}")
+        sys.exit(1)
 
+# Insert data into Transceiver table
+def insert_transceiver(cursor, tag_ref, company_id, balance):
+    # Check if tagRef already exists
+    cursor.execute("SELECT COUNT(*) FROM Transceiver WHERE tagRef = %s", (tag_ref,))
+    count = cursor.fetchone()[0]
+    
+    if count == 0:
+        query = """
+        INSERT INTO Transceiver (tagRef, company_id, balance) 
+        VALUES (%s, %s, %s)
+        """
+        cursor.execute(query, (tag_ref, company_id, balance))
+        print(f"Inserted tagRef: {tag_ref}, company_id: {company_id}, balance: {balance}")
+    else:
+        print(f"Duplicate tagRef found: {tag_ref}, skipping insert.")
+
+# Insert data into Passages and handle logic
+def insert_data(cursor, conn, df):
+    try:
         # Deactivate previous debts before inserting new data
         cursor.execute("""UPDATE Debt SET is_active = 0;""")
-
+        
         for _, row in df.iterrows():
             cursor.execute(
                 """SELECT passage_id FROM Passages WHERE timestamp=%s AND tollID=%s AND tagRef=%s AND tagHomeID=%s AND charge=%s""",
@@ -92,19 +115,32 @@ def insert_data(df):
 
     except Error as e:
         print(f"Error: {e}")
-    finally:
-        # Ensure cursor and connection are properly closed
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
 
 if __name__ == "__main__":
+    # Establish database connection
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
     # CSV file path is passed as an argument to the script
     csv_file_path = sys.argv[1]
+
+    # Insert Transceiver data
+    with open(csv_file_path, mode='r') as file:
+        csv_reader = csv.DictReader(file)
+        for row in csv_reader:
+            tag_ref = row['tagRef']
+            tag_home_id = row['tagHomeID']
+            # Random balance for the transceiver between 0 and 80
+            balance = round(random.uniform(0, 80), 2)
+            insert_transceiver(cursor, tag_ref, tag_home_id, balance)
+
+    # Process Passages data
     try:
-        # Read CSV data into pandas DataFrame
         data = pd.read_csv(csv_file_path)
-        insert_data(data)
+        insert_data(cursor, conn, data)
     except Exception as e:
         print(f"Failed to process CSV: {e}")
+
+    # Close connection
+    cursor.close()
+    conn.close()

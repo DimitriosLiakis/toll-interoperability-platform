@@ -23,19 +23,34 @@ const tollRouter = require('./routers/tollRouter');
 const chargesBy = require('./routers/chargesBy_router');
 const passAnalysis = require('./routers/passAnalysis_router');
 const authRouter = require('./routers/auth_router');
+const passAnalysis = require('./routers/passAnalysis_router')
+const forecast = require('./routers/forecast_router');
+const training = require('./routers/training_router');
+const peak_hour = require('./routers/peak_hour_router');
 
 
 // Use the routes
+// --- use case 1 ---
 app.use('/api/passing_toll',passing_toll_routes);
 app.use('/api/upload_passages', upload_passages_routes);
 app.use('/api/cancel_debts', cancel_debts);
 app.use('/api/get_debts_optimization', get_figures)
+//---------------------
+// ---- Default Operations
 app.use('/api/tollStationPasses', tollStationRouter)
 app.use('/api/passesCost', passesCost)
 app.use('/api/chargesBy', chargesBy);
-app.use('/api', tollRouter);
 app.use('/api/passAnalysis', passAnalysis);
 app.use('/', authRouter);
+// ---------------------
+// ---- use Case 2 the Map ----
+app.use('/api', tollRouter);
+//--------------------------
+// --- use Case 3 ---
+app.use('/api/forecast', forecast); //forecast only for passages
+app.use('/api/peak_hour', peak_hour);
+app.use('/api/training', training); //trains everything
+
 
 // Root route
 app.get('/', (req, res) => {

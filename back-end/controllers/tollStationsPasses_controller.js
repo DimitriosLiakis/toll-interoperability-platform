@@ -1,22 +1,21 @@
 const path = require('path');
 const fs = require('fs');
-const DbService = require('../dbService.js'); // Database service
+const DbService = require('../dbService.js'); 
 const util = require('util');
-const json2csv = require('json2csv').parse; // Για μετατροπή σε CSV
+const json2csv = require('json2csv').parse; 
 
-// Controller για την επιστροφή διελεύσεων
 const getTollStationPasses = async (req, res, next) => {
     try {
         const { tollStationID, date_from, date_to } = req.params;
-        const format = req.query.format || 'json'; // Αν δεν υπάρχει παράμετρος format, χρησιμοποιούμε το json ως default
+        const format = req.query.format || 'json'; // Default μορφή JSON
 
-        // Έλεγχος αν λείπουν παράμετροι
         if (!tollStationID || !date_from || !date_to) {
-            return res.status(204).send(); // Αν λείπει οποιαδήποτε παράμετρος, επιστρέφουμε 204 No Content
+            return res.status(400).json({ error: 'Missing required parameters: tollStationID, date_from, date_to' });
         }
 
+        // Έλεγχος αν οι ημερομηνίες είναι σε σωστή μορφή
         if (!/^\d{8}$/.test(date_from) || !/^\d{8}$/.test(date_to)) {
-            return res.status(204).send(); // Αν το φορμάτ είναι λανθασμένο, επιστρέφουμε 204 No Content
+            return res.status(400).json({ error: 'Invalid date format. Expected YYYYMMDD.' });
         }
 
         const formattedDateFrom = `${date_from.slice(0, 4)}-${date_from.slice(4, 6)}-${date_from.slice(6, 8)}`;
@@ -24,10 +23,10 @@ const getTollStationPasses = async (req, res, next) => {
 
         const dbService = DbService.getDbServiceInstance();
         const passes = await dbService.getRecordsBetweenDate(tollStationID, formattedDateFrom, formattedDateTo);
+        console.log(passes)
 
-        // Αν δεν υπάρχουν δεδομένα για τον σταθμό ή την περίοδο
         if (passes.length === 0) {
-            return res.status(204).send(); // Αν δεν υπάρχουν δεδομένα, επιστρέφουμε 204 No Content
+            return res.status(204).send(); // 204 No Content
         }
 
         let str1 = tollStationID;
@@ -58,16 +57,14 @@ const getTollStationPasses = async (req, res, next) => {
         if (format === 'csv') {
             const csv = json2csv(response.passList); 
             res.header('Content-Type', 'text/csv'); // Ορισμός τύπου περιεχομένου
-            res.attachment('toll_passes.csv'); // Προαιρετικά, προσδιορισμός του ονόματος του αρχείου
-            return res.send(csv); // Επιστροφή του CSV
+            res.attachment('toll_passes.csv'); // Όνομα αρχείου
+            return res.send(csv);
         }
 
-        // Επιστροφή της απάντησης σε JSON (ή default μορφή)
-        res.json(response);
+        res.status(200).json(response); // 200 Success
     } catch (error) {
-        // Διαχείριση σφαλμάτων στον server
         console.error('Error fetching toll station passes:', error);
-        next(error); // Πάσα στο error handling middleware
+        res.status(500).json({ error: 'Internal Server Error' }); // 500 Internal Server Error
     }
 };
 

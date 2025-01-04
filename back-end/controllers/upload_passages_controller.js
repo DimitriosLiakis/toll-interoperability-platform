@@ -2,13 +2,12 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { promisify } = require('util');
-const readFileAsync = promisify(fs.readFile); // Promisify fs.readFile for async/await
+const readFileAsync = promisify(fs.readFile); 
 
 // Multer configuration for file storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.resolve(__dirname, '../uploads'); // Ensure path is correct
-    // Create upload directory if it does not exist
+    const uploadDir = path.resolve(__dirname, '../uploads'); 
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -17,9 +16,9 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uploadPath = path.resolve(__dirname, '../uploads/passages.csv'); // Resolve path
     if (fs.existsSync(uploadPath)) {
-      fs.unlinkSync(uploadPath); // Remove existing passages.csv if it exists
+      fs.unlinkSync(uploadPath); 
     }
-    cb(null, 'passages.csv'); // Always save as passages.csv
+    cb(null, 'passages.csv'); 
   },
 });
 
@@ -39,19 +38,17 @@ const upload = multer({
   },
 }).single('file');
 
-// Controller function for file upload and CSV response
 exports.uploadCsv = async (req, res) => {
   try {
     // First, attempt to upload the file
     upload(req, res, async (err) => {
       if (err) {
         // If there's an error during file upload
-        return res.status(400).json({ message: err.message });
+        return res.status(500).json({ message: err.message });
       }
 
-      // Check if no file was uploaded
       if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded.' });
+        return res.status(204).json({ message: 'No file uploaded.' });
       }
 
       // Check if the format query parameter exists (defaults to 'json')
