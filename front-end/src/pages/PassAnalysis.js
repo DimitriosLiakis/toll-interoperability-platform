@@ -6,13 +6,14 @@ import './PassAnalysis.css';
 
 const PassAnalysis = () => {
     const operationOptions = [
-        { value: 'AM', label: 'AM - Αυτοκινητόδρομος Αιγαίου' },
-        { value: 'EG', label: 'EG - Εγνατία Οδός' },
-        { value: 'KO', label: 'KO - Κεντρική Οδός' },
-        { value: 'MO', label: 'MO - Μορέας' },
-        { value: 'NAO', label: 'NAO - Αττική Οδός' },
-        { value: 'NO', label: 'NO - Νέα Οδός' },
-        { value: 'OO', label: 'OO - Ολυμπία Οδός' },
+        { value: 'AM', label: 'Αυτοκινητόδρομος Αιγαίου' },
+        { value: 'EG', label: 'Εγνατία Οδός' },
+        { value: 'KO', label: 'Κεντρική Οδός' },
+        { value: 'MO', label: 'Μορέας' },
+        { value: 'NAO', label: 'Αττική Οδός' },
+        { value: 'NO', label: 'Νέα Οδός' },
+        { value: 'OO', label: 'Ολυμπία Οδός' },
+        { value: 'GE', label: 'Γέφυρα' },
     ];
 
     const [stationOpID, setStationOpID] = useState('');
