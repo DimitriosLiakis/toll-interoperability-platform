@@ -44,8 +44,10 @@ const passAnalysis_controller = async (req, res, next) => {
                 passCharge: parseFloat(pass.passCharge)
             }))
         };
-        if (response.nPasses==0)
-            return res.status(204).json({ error: 'No Content' });
+        if (response.nPasses === 0) {
+            return res.status(204).end(); // Send 204 status with no body
+        }
+        
 
         if (formatQuery === 'csv') {
             const csv = json2csv(response.passList, {
