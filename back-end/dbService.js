@@ -17,7 +17,9 @@ const pool = mysql.createPool({
 
 // Promisify the pool.query method for easier use with async/await
 const promisePool = pool.promise();
-
+const simulateDbError = () => {
+    throw new Error('Simulated Database error');
+  };
 class DbService {
     // Define static instance to handle singleton pattern
     static instance = null;
