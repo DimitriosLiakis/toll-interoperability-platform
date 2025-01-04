@@ -4,6 +4,6 @@ const { uploadCsv } = require('../controllers/upload_passages_controller');
 const router = express.Router();
 
 // Route for uploading CSV files
-router.use('/', uploadCsv);
+router.post('/', uploadCsv);
 
-module.exports = router; // Fix: Correct the export
+module.exports = router; 
