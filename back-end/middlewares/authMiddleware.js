@@ -4,7 +4,7 @@ const dotenv = require('dotenv').config();
 /**
  * Middleware για την επικύρωση του JWT token στο header X-OBSERVATORY-AUTH.
  */
-const authMiddleware = (req, res, next) => {
+const authenticateToken = (req, res, next) => {
     // Ανάκτηση του token από το custom header
     const token = req.headers['x-observatory-auth'];
 
@@ -24,4 +24,17 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-module.exports = authMiddleware;
+const authorizeRole = (requiredRoles) => {
+    return (req, res, next) => {
+        if(requiredRoles.includes(req.user.user_role)) {
+            next();
+        } else {
+            res.status(403).json({ error: "Access Denied - Insufficient Permissions" });
+        }
+    }
+};
+
+module.exports = { 
+    authenticateToken,
+    authorizeRole
+  };  

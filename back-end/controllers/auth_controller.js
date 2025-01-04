@@ -25,7 +25,8 @@ const authenticate = async (req, res) => {
 
         const payload = {
             user_id: user.user_id,
-            user_email: user.user_email
+            user_email: user.user_email,
+            user_role: user.user_role
         };
 
         const token = jwt.sign(payload, process.env.SECRET_KEY || 'mySuperSecretKey', { expiresIn: '1h' });

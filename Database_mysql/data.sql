@@ -92,14 +92,14 @@ UNLOCK TABLES;
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` (`user_id`, `user_email`, `user_password`, `user_session_id`) VALUES
-(3, 'admin@aodos.gr', '$2a$10$fEjir2k.iOOP7c2HMyCaGOa1p0ZDWHlelOzGhEsLpC9/cmS0hcHfK', NULL),
-(4, 'admin@gefyra.gr', '$2a$10$MFU98CfwLVwIBcYE.7XR6uWs3KKV4EkQ.XTi6fptZXrLe8iMaohdm', NULL),
-(5, 'admin@egnatia.eu', '$2a$10$Bey8WDOEfhBmyxjeDUVNGO0aD3UWOo1WJH55uAdnhLnz3C6jQ3qpe', NULL),
-(6, 'admin@kentrikiodos.gr', '$2a$10$g4Xi//0YwU8/k8kxOLjoFORpV7lCIyZtVio4/p7lv5UFKzZ3alVbi', NULL),
-(7, 'admin@moreas.com.gr', '$2a$10$4EzsD2nFnUjsmw70Ph0er.nkOh7eIBChwl/CqEeF0UxXHx01PMlpK', NULL),
-(8, 'admin@neaodos.gr', '$2a$10$XIS35/9CIWwlfahV6XLEoOw2IySe1kwCD2L8PZm/AgQsXNyOMkwPa', NULL),
-(9, 'admin@olympiaodos.gr', '$2a$10$4JCWLjkKV11cHzLtNXvkUebcLq0tN/PzXRquUtHtkeZGWYrziKET.', NULL),
-(10, 'admin@yme.gov.gr', '$2a$10$9ihz5H8hu4BK3mSUdQ1VaOZj6YiKFIkgw/MDjUIb6x.XFIuzGvgt2', NULL);
+INSERT INTO `users` (`user_id`, `user_email`, `user_password`, `user_role`) VALUES
+(3, 'admin@aodos.gr', '$2a$10$fEjir2k.iOOP7c2HMyCaGOa1p0ZDWHlelOzGhEsLpC9/cmS0hcHfK', "user"),
+(4, 'admin@gefyra.gr', '$2a$10$MFU98CfwLVwIBcYE.7XR6uWs3KKV4EkQ.XTi6fptZXrLe8iMaohdm', "user"),
+(5, 'admin@egnatia.eu', '$2a$10$Bey8WDOEfhBmyxjeDUVNGO0aD3UWOo1WJH55uAdnhLnz3C6jQ3qpe', "user"),
+(6, 'admin@kentrikiodos.gr', '$2a$10$g4Xi//0YwU8/k8kxOLjoFORpV7lCIyZtVio4/p7lv5UFKzZ3alVbi', "user"),
+(7, 'admin@moreas.com.gr', '$2a$10$4EzsD2nFnUjsmw70Ph0er.nkOh7eIBChwl/CqEeF0UxXHx01PMlpK', "user"),
+(8, 'admin@neaodos.gr', '$2a$10$XIS35/9CIWwlfahV6XLEoOw2IySe1kwCD2L8PZm/AgQsXNyOMkwPa', "user"),
+(9, 'admin@olympiaodos.gr', '$2a$10$4JCWLjkKV11cHzLtNXvkUebcLq0tN/PzXRquUtHtkeZGWYrziKET.', "user"),
+(10, 'admin@yme.gov.gr', '$2a$10$9ihz5H8hu4BK3mSUdQ1VaOZj6YiKFIkgw/MDjUIb6x.XFIuzGvgt2', "admin");
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;

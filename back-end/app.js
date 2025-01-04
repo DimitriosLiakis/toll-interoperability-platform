@@ -23,7 +23,6 @@ const tollRouter = require('./routers/tollRouter');
 const chargesBy = require('./routers/chargesBy_router');
 const passAnalysis = require('./routers/passAnalysis_router');
 const authRouter = require('./routers/auth_router');
-//const uploadPassagesRouter = require('./routers/upload_passages_router');
 
 
 // Use the routes
@@ -37,7 +36,6 @@ app.use('/api/chargesBy', chargesBy);
 app.use('/api', tollRouter);
 app.use('/api/passAnalysis', passAnalysis);
 app.use('/', authRouter);
-//app.use('/admin/addpasses', uploadPassagesRouter);
 
 // Root route
 app.get('/', (req, res) => {
