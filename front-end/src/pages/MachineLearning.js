@@ -297,8 +297,17 @@ export default function MLDashboard() {
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
   const [forecastDate, setForecastDate] = useState('');
 
-  const companies = ['AM', 'EG', 'GE', 'KO', 'MO', 'NAO', 'NO', 'OO'];
-
+  const companies = [
+    { value: 'AM', label: 'Αυτοκινητόδρομος Αιγαίου' },
+    { value: 'EG', label: 'Εγνατία Οδός' },
+    { value: 'KO', label: 'Κεντρική Οδός' },
+    { value: 'MO', label: 'Μορέας' },
+    { value: 'NAO', label: 'Αττική Οδός' },
+    { value: 'NO', label: 'Νέα Οδός' },
+    { value: 'OO', label: 'Ολυμπία Οδός' },
+    { value: 'GE', label: 'Γέφυρα' },
+  ];
+  
   const trainModels = async () => {
     setLoading(true);
     setTrainingStatus('Training models...');
@@ -417,16 +426,17 @@ export default function MLDashboard() {
           <div>
             <label className="block text-sm font-medium mb-1">Εταιρεία</label>
             <select
-              value={selectedCompany}
-              onChange={(e) => setSelectedCompany(e.target.value)}
-              className="w-full p-2 border rounded"
-            >
-              {companies.map((company) => (
-                <option key={company} value={company}>
-                  {company}
-                </option>
-              ))}
-            </select>
+  value={selectedCompany}
+  onChange={(e) => setSelectedCompany(e.target.value)}
+  className="w-full p-2 border rounded"
+>
+  {companies.map((company) => (
+    <option key={company.value} value={company.value}>
+      {company.label} {/* Use company.label here */}
+    </option>
+  ))}
+</select>
+
           </div>
           <div className="date-inputs">
             <div>
@@ -499,16 +509,17 @@ export default function MLDashboard() {
           <div>
             <label className="block text-sm font-medium mb-1">Εταιρεία</label>
             <select
-              value={selectedCompany}
-              onChange={(e) => setSelectedCompany(e.target.value)}
-              className="w-full p-2 border rounded"
-            >
-              {companies.map((company) => (
-                <option key={company} value={company}>
-                  {company}
-                </option>
-              ))}
-            </select>
+  value={selectedCompany}
+  onChange={(e) => setSelectedCompany(e.target.value)}
+  className="w-full p-2 border rounded"
+>
+  {companies.map((company) => (
+    <option key={company.value} value={company.value}>
+      {company.label} {/* Use company.label here */}
+    </option>
+  ))}
+</select>
+
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Ημερομηνία</label>
