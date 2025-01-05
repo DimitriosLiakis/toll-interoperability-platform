@@ -22,9 +22,7 @@ function Header({ isLoggedIn, setIsLoggedIn }) {
         <NavLink to="/map" className={({ isActive }) => (isActive ? 'active' : 'inactive')}>
           Χάρτης
         </NavLink>
-        <NavLink to="/upload" className={({ isActive }) => (isActive ? 'active' : 'inactive')}>
-          Διελεύσεις
-        </NavLink>
+        
         {isLoggedIn && (
           <>
             <NavLink to="/stats" className={({ isActive }) => (isActive ? 'active' : 'inactive')}>
@@ -37,7 +35,7 @@ function Header({ isLoggedIn, setIsLoggedIn }) {
               to="/machine"
               className={({ isActive }) => (isActive ? 'active' : 'inactive')}
             >
-              Machine Learning
+              Προβλέψεις Κυκλοφορίας 
             </NavLink>
           </>
         )}

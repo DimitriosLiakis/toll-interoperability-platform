@@ -86,7 +86,7 @@ const PassAnalysis = () => {
 
     return (
         <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-            <h2>Ανάλυση Περασμάτων</h2>
+            <h2>Ανάλυση Διελεύσεων</h2>
             <form onSubmit={handleSubmit}>
                 <div>
                     <label>Κωδικός Λειτουργού Σταθμού:</label>

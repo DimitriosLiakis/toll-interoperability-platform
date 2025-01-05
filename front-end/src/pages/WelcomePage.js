@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import '../styles/WelcomePage.css';
+import '../pages/WelcomePage.css'; // Ensure the correct path to your CSS file
 
 function WelcomePage() {
   return (

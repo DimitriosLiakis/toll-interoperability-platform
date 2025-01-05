@@ -214,7 +214,7 @@ function Map() {
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {/* Map Container */}
-      <div id="map" style={{ height: "600px", width: "100%" }}></div>
+      <div id="map" style={{ height: "700px", width: "100%" }}></div>
     </div>
   );
 }

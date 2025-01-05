@@ -40,7 +40,7 @@ function LoginPage({ setIsLoggedIn }) {
 
   return (
     <div className="login-page">
-      <h2>Login</h2>
+      <h2>Καλώς ήρθατε στην υπηρεσία TollAnalysis </h2>
       <form onSubmit={handleLogin} className="login-form">
         <input
           type="email"

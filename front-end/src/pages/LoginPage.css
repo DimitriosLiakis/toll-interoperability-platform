@@ -3,7 +3,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 50px;
+    background: url('../assets/tollll.webp') no-repeat center center;
+    background-size: cover;
+    height: 88vh; /* Adjust height if necessary */
   }
   
   .login-form {
@@ -23,4 +25,8 @@
     font-size: 16px;
     cursor: pointer;
   }
-  
+  .login-page h2 {
+    color: #ffffff; /* Replace with your desired color */
+    text-align: center; /* Optional: centers the text */
+    font-size: 24px; /* Optional: adjust size */
+}

@@ -25,7 +25,7 @@ const DebtSection = ({ title, html, sectionKey }) => {
           srcDoc={html}
           style={{
             width: "600px",
-            height: "500px",
+            height: "620px",
             border: "1px solid lightgray",
             backgroundColor: "white",
             borderRadius: "8px",
@@ -39,6 +39,81 @@ const DebtSection = ({ title, html, sectionKey }) => {
   );
 };
 
+const CsvSection = ({ title, csvData }) => {
+  if (!csvData) {
+    return <p>No CSV data available.</p>;
+  }
+
+  const rows = csvData
+    .split('\n')
+    .filter((row) => row.trim() !== '') // Remove empty rows
+    .map((row) => row.split(','));
+
+  if (rows.length === 0) {
+    return <p>No CSV data available.</p>;
+  }
+
+  // Filter rows: Keep rows where at least one value is not zero
+  const filteredRows = rows.filter((row, rowIndex) => {
+    // Always keep the header row
+    if (rowIndex === 0) return true;
+
+    // Check if all cells in the row are "0"
+    return row.some((cell) => cell.trim() !== "0");
+  });
+
+  if (filteredRows.length <= 1) {
+    // If only the header row remains, show a message
+    return <p>No data to display.</p>;
+  }
+
+  return (
+    <div className="p-6 border rounded-lg shadow-sm" style={{ marginTop: "2rem" }}>
+      <h2 className="text-2xl font-bold mb-4">{title}</h2>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              {filteredRows[0].map((header, index) => (
+                <th
+                  key={index}
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    backgroundColor: "#f2f2f2",
+                  }}
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRows.slice(1).map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {row.map((cell, cellIndex) => (
+                  <td
+                    key={cellIndex}
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {cell.trim() === "0" ? "" : cell} {/* Hide zero values */}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+
+
 const DebtsPage = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -50,9 +125,11 @@ const DebtsPage = () => {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const result = await response.json();
+        console.log(result); // Debugging line
         setData(result);
       })
       .catch((err) => {
+        console.error(err); // Debugging line
         setError(err.message);
       });
   }, []);
@@ -98,22 +175,24 @@ const DebtsPage = () => {
           marginBottom: "2rem",
         }}
       >
-        Debts Analysis
+        Debt Figures
       </h1>
 
       <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
         <DebtSection
-          title="Initial Debts"
+          title="Αρχικές Οφειλές"
           html={data.html.html1}
           sectionKey="initial"
         />
 
         <DebtSection
-          title="Final Debts"
+          title="Τελικές Οφειλές"
           html={data.html.html2}
           sectionKey="final"
         />
       </div>
+
+      <CsvSection title="Graph Data (graph2.csv)" csvData={data.csv} />
     </div>
   );
 };
