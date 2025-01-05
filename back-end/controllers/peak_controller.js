@@ -73,7 +73,7 @@ async function makePeakHourPrediction(company_id, res, formatQuery, inputCsvPath
         const data_for_nop = await dbService.data_for_peak_hour(company_id);
 
         if (!data_for_nop) {
-            return res.status(404).json({ error: 'No data found for the company' });
+            return res.status(204).json({ error: 'No data found for the company' });
         }
 
         const dict_id_input = ['AM', 'EG', 'GE', 'KO', 'MO', 'NAO', 'NO', 'OO'];
@@ -101,7 +101,7 @@ async function makePeakHourPrediction(company_id, res, formatQuery, inputCsvPath
         }, {});
 
         if (!modelFileMapping[company_id]) {
-            return res.status(404).json({ error: `No model found for company: ${company_id}` });
+            return res.status(204).json({ error: `No model found for company: ${company_id}` });
         }
         const pythonProcess = spawn('python3', [
             './ml/predict_peak_hours.py', 

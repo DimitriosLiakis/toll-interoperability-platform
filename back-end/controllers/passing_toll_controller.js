@@ -48,13 +48,15 @@ const passing_toll = async (req, res) => {
         const newRecords = await dbService.getRecordsBetweenIds(lastPId_before);
         const lastPId_after = await dbService.getLastPassageId();
 
+        const format = req.query.format || 'json';
+
+        if (format != 'json' && format!='csv') {
+            return res.status(400).end();
+        }
         // If no new records found
         if (newRecords.length === 0) {
-            return res.status(404).json({ error: 'No new records found after last passage.' }); // 404 Not Found
+            return res.status(204).json({ error: 'No new records found after last passage.' }); // 404 Not Found
         }
-
-        // Determine response format
-        const format = req.query.format || 'json';
 
         if (format === 'csv') {
             // Convert records to CSV format
