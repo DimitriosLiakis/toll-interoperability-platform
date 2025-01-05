@@ -236,6 +236,16 @@ class DbService {
             throw error;
         }
     }
+
+    async getUser(user_email){
+        try {
+            const query = `SELECT * FROM users WHERE user_email = ?`;
+            const [rows] = await promisePool.query(query, [user_email]);
+            return rows[0];
+        } catch (error) {
+            console.error('Error in getUser:', error.message);
+        }
+    }
     
     async get_most_passages_for_date_and_company(company_id) {
         try {

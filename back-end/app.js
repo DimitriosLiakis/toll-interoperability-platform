@@ -21,6 +21,7 @@ const passesCost = require('./routers/passesCost_router');
 const tollRouter = require('./routers/tollRouter');
 const chargesBy = require('./routers/chargesBy_router');
 const passAnalysis = require('./routers/passAnalysis_router')
+const authRouter = require('./routers/auth_router');
 const forecast = require('./routers/forecast_router');
 const training = require('./routers/training_router');
 const peak_hour = require('./routers/peak_hour_router');
@@ -38,6 +39,7 @@ app.use('/api/tollStationPasses', tollStationRouter)
 app.use('/api/passesCost', passesCost)
 app.use('/api/chargesBy', chargesBy);
 app.use('/api/passAnalysis', passAnalysis);
+app.use('/', authRouter);
 // ---------------------
 // ---- use Case 2 the Map ----
 app.use('/api', tollRouter);
