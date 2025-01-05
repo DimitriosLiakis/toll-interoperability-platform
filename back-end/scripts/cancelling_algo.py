@@ -9,6 +9,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 import plotly.graph_objects as go
+import csv
 
 # Load environment variables from .env file
 load_dotenv()
@@ -182,3 +183,26 @@ if __name__ == "__main__":
     fill_graph(graph2)
     visualize_graph(graph1, "Initial Debt Graph", "initial_debts")
     visualize_graph(graph2, "Final Debt Graph", "final_debts")
+    output_dir = "../debt_figures"
+    os.makedirs(output_dir, exist_ok=True)
+    output_dir = "../debt_figures"
+    os.makedirs(output_dir, exist_ok=True)
+    filename = "graph2"  # Name for the CSV file
+    output_path = os.path.join(output_dir, f"{filename}.csv")
+
+    # Flatten and write graph2 to the CSV
+    with open(output_path, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        
+        # Write the header
+        writer.writerow(["Debtor", "Creditor", "Amount"])
+        
+        # Write the rows
+        for debtor, creditors in graph2.items():
+            for creditor, amount in creditors.items():
+                if amount != 0.0:
+                    writer.writerow([debtor, creditor, amount])
+
+    print(f"Graph2 successfully written to {output_path}")
+    
+    
