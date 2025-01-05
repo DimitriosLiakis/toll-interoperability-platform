@@ -23,7 +23,6 @@ const tollRouter = require('./routers/tollRouter');
 const chargesBy = require('./routers/chargesBy_router');
 const passAnalysis = require('./routers/passAnalysis_router');
 const authRouter = require('./routers/auth_router');
-const passAnalysis = require('./routers/passAnalysis_router')
 const forecast = require('./routers/forecast_router');
 const training = require('./routers/training_router');
 const peak_hour = require('./routers/peak_hour_router');

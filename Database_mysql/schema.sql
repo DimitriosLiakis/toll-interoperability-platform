@@ -200,5 +200,5 @@ CREATE TABLE `users` (
     `user_id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_email` VARCHAR(255) NOT NULL UNIQUE,
     `user_password` VARCHAR(255) NOT NULL,
-    `user_role` ENUM("admin","aodos","gefyra","egnatia","kentrikiodos","moreas","neaodos","olympiaodos") NOT NULL 
+    `user_role` ENUM("admin","users") default "users" 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
