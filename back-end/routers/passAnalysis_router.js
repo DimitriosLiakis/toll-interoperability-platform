@@ -3,12 +3,18 @@ const router = express.Router();
 const passAnalysis_controller = require('../controllers/passAnalysis_controller');
 const { authenticateToken, authorizeRole } = require('../middlewares/authMiddleware');
 
+//router.get('/:stationOpID/:tagOpID/:date_from/:date_to', passAnalysis_controller);
 router.get('/:stationOpID/:tagOpID/:date_from/:date_to', authenticateToken, authorizeRole(['user', 'admin']), (req, res) => {
-    const user = req.user;
-    if (user.role === 'user' && user.company_id !== req.params.stationOpID) {
-        return res.status(403).json({ error: 'Access denied' });
+    try {
+        const user = req.user;
+        if (user.role === 'user' && user.company_id !== req.params.stationOpID) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+        const result = passAnalysis_controller(req, res);
+        return res.status(result ? 200 : 204).json(result || {});
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error', details: error.message });
     }
-    passAnalysis_controller(req, res);
 });
 
 module.exports = router;
