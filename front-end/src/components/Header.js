@@ -5,11 +5,38 @@ import './Header.css';
 function Header({ isLoggedIn, setIsLoggedIn }) {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsLoggedIn(false);
-    navigate('/'); // Redirect to home page
-    alert('You have been logged out.');
+  const handleLogout = async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      alert('No token found. You are already logged out.');
+      setIsLoggedIn(false);
+      navigate('/');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:9115/api/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-observatory-auth': token,
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        localStorage.removeItem('token');
+        setIsLoggedIn(false);
+        alert('You have been logged out.');
+        navigate('/');
+      } else {
+        alert(data.error || 'Logout failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('An error occurred during logout. Please try again.');
+    }
   };
 
   return (
@@ -22,9 +49,7 @@ function Header({ isLoggedIn, setIsLoggedIn }) {
         <NavLink to="/map" className={({ isActive }) => (isActive ? 'active' : 'inactive')}>
           Χάρτης
         </NavLink>
-        <NavLink to="/upload" className={({ isActive }) => (isActive ? 'active' : 'inactive')}>
-          Διελεύσεις
-        </NavLink>
+
         {isLoggedIn && (
           <>
             <NavLink to="/stats" className={({ isActive }) => (isActive ? 'active' : 'inactive')}>
@@ -37,7 +62,7 @@ function Header({ isLoggedIn, setIsLoggedIn }) {
               to="/machine"
               className={({ isActive }) => (isActive ? 'active' : 'inactive')}
             >
-              Machine Learning
+              Προβλέψεις Κυκλοφορίας
             </NavLink>
           </>
         )}

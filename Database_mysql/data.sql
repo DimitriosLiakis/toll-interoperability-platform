@@ -21,7 +21,14 @@
 
 LOCK TABLES `Company` WRITE;
 /*!40000 ALTER TABLE `Company` DISABLE KEYS */;
-INSERT INTO `Company` VALUES ('AM','Aegean Motorway','aegean.motorway@example.com',30),('EG','Egnatia Odos','egnatia.odos@example.com',74),('GE','Gefyra S.A.','gefyra@example.com',2),('KO','Kentriki Odos','kentriki.odos@example.com',26),('MO','Moreas S.A.','moreas@example.com',18),('NAO','Naodos S.A.','naodos@example.com',41),('NO','Nea Odos','nea.odos@example.com',34),('OO','Olympia Odos','olympia.odos@example.com',28);
+INSERT INTO `Company` VALUES 
+('EG','Egnatia Odos','egnatia.odos@example.com',74),
+('GE','Gefyra S.A.','gefyra@example.com',2),
+('KO','Kentriki Odos','kentriki.odos@example.com',26),
+('MO','Moreas S.A.','moreas@example.com',18),
+('NAO','Naodos S.A.','naodos@example.com',41),
+('NO','Nea Odos','nea.odos@example.com',34),
+('OO','Olympia Odos','olympia.odos@example.com',28);
 /*!40000 ALTER TABLE `Company` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -82,3 +89,17 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2024-11-14 18:45:54
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` (`user_id`, `user_email`, `user_password`, `user_role`) VALUES
+(3, 'admin@aodos.gr', '$2a$10$fEjir2k.iOOP7c2HMyCaGOa1p0ZDWHlelOzGhEsLpC9/cmS0hcHfK', "users"),
+(4, 'admin@gefyra.gr', '$2a$10$MFU98CfwLVwIBcYE.7XR6uWs3KKV4EkQ.XTi6fptZXrLe8iMaohdm', "users"),
+(5, 'admin@egnatia.eu', '$2a$10$Bey8WDOEfhBmyxjeDUVNGO0aD3UWOo1WJH55uAdnhLnz3C6jQ3qpe', "users"),
+(6, 'admin@kentrikiodos.gr', '$2a$10$g4Xi//0YwU8/k8kxOLjoFORpV7lCIyZtVio4/p7lv5UFKzZ3alVbi', "users"),
+(7, 'admin@moreas.com.gr', '$2a$10$4EzsD2nFnUjsmw70Ph0er.nkOh7eIBChwl/CqEeF0UxXHx01PMlpK', "users"),
+(8, 'admin@neaodos.gr', '$2a$10$XIS35/9CIWwlfahV6XLEoOw2IySe1kwCD2L8PZm/AgQsXNyOMkwPa', "users"),
+(9, 'admin@olympiaodos.gr', '$2a$10$4JCWLjkKV11cHzLtNXvkUebcLq0tN/PzXRquUtHtkeZGWYrziKET.', "users"),
+(10, 'admin@yme.gov.gr', '$2a$10$9ihz5H8hu4BK3mSUdQ1VaOZj6YiKFIkgw/MDjUIb6x.XFIuzGvgt2', "admin");
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;

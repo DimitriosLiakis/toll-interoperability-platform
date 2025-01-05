@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import '../pages/WelcomePage.css';
 
+
 function WelcomePage() {
   return (
     <div className="welcome-container">

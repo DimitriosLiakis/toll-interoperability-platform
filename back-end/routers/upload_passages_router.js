@@ -1,9 +1,8 @@
 const express = require('express');
 const { uploadCsv } = require('../controllers/upload_passages_controller');
-
 const router = express.Router();
+const { authenticateToken, authorizeRole } = require('../middlewares/authMiddleware');
 
-// Route for uploading CSV files
-router.post('/', uploadCsv);
-
+router.post('/',authenticateToken, authorizeRole(["user","admin"]), uploadCsv);
+//router.post('/', uploadCsv);
 module.exports = router; 

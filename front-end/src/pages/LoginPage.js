@@ -1,7 +1,6 @@
-// LoginPage.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./LoginPage.css";
+import "./LoginPage.css"; // Optional styling
 
 function LoginPage({ setIsLoggedIn }) {
   const [email, setEmail] = useState("");
@@ -12,6 +11,7 @@ function LoginPage({ setIsLoggedIn }) {
     e.preventDefault();
 
     try {
+      // Make a POST request to the /api/login endpoint
       const response = await fetch("http://localhost:9115/api/login", {
         method: "POST",
         headers: {
@@ -24,23 +24,30 @@ function LoginPage({ setIsLoggedIn }) {
       });
 
       const data = await response.json();
+
       if (response.ok) {
+        // Store the token in localStorage (for later use)
         localStorage.setItem("token", data.token);
+
+        // Update the parent state (if you’re using a parent App component)
         setIsLoggedIn(true);
+
         alert("Login successful!");
-        navigate("/"); // Redirect to home page
+        // Redirect to a protected page (e.g., home/dashboard)
+        navigate("/");
       } else {
-        alert(data.error || "Login failed");
+        // Handle errors from the server (e.g., invalid password, user not found)
+        alert(data.error || "Login failed. Please try again.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert("An error occurred during login");
+      alert("An error occurred during login. Please try again.");
     }
   };
 
   return (
     <div className="login-page">
-      <h2>Login</h2>
+      <h2>Welcome to TollAnalysis Service</h2>
       <form onSubmit={handleLogin} className="login-form">
         <input
           type="email"
@@ -49,6 +56,7 @@ function LoginPage({ setIsLoggedIn }) {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+
         <input
           type="password"
           placeholder="Password"
@@ -56,6 +64,7 @@ function LoginPage({ setIsLoggedIn }) {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+
         <button type="submit" className="login-button">
           Login
         </button>
