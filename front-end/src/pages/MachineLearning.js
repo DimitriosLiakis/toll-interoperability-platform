@@ -296,7 +296,8 @@ const tollNameMapping = {
   OO26: "Σταθμός Διοδίων Ζευγολατιού Πλευρικά (Προς Αθήνα)",
   OO27: "Σταθμός Διοδίων Κιάτου Πλευρικά (Από Πάτρα)",
   OO28: "Σταθμός Διοδίων Κιάτου Πλευρικά (Προς Πάτρα)",
-};export default function MLDashboard() {
+};
+export default function MLDashboard() {
   const [loading, setLoading] = useState(false);
   const [trainingStatus, setTrainingStatus] = useState('');
   const [error, setError] = useState('');
@@ -323,14 +324,24 @@ const tollNameMapping = {
     { value: 'forecast', label: 'Πρόβλεψη μέγιστης ροής οχημάτων' },
   ];
 
+  // 1. Include the token in all your fetch calls by default
+  const token = localStorage.getItem('token');
+
   const trainModels = async () => {
     setLoading(true);
     setTrainingStatus('Training models...');
     setError('');
     try {
-      const response = await fetch('http://localhost:9115/api/training', { method: 'POST' });
+      // 2. Pass the token in the request header
+      const response = await fetch('http://localhost:9115/api/training', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-observatory-auth': token, 
+        },
+      });
       if (!response.ok) throw new Error('Training failed');
-      const data = await response.json();
+      await response.json(); // If your backend returns a success message
       setTrainingStatus('Training completed successfully');
     } catch (err) {
       setError('Failed to train models: ' + err.message);
@@ -350,9 +361,23 @@ const tollNameMapping = {
       const fromDate = dateRange.from.replace(/-/g, '');
       const toDate = dateRange.to.replace(/-/g, '');
       const response = await fetch(
-        `http://localhost:9115/api/peak_hour/${selectedCompany}/${fromDate}/${toDate}`
+        `http://localhost:9115/api/peak_hour/${selectedCompany}/${fromDate}/${toDate}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-observatory-auth': token, 
+          },
+        }
       );
-      if (!response.ok) throw new Error('Failed to fetch predictions');
+      if (!response.ok) {
+        // Optional: handle 401/403 for unauthorized
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('Unauthorized request. Please login again.');
+        } else {
+          throw new Error('Failed to fetch predictions');
+        }
+      }
       const data = await response.json();
 
       // Transform backend response
@@ -360,7 +385,7 @@ const tollNameMapping = {
         ...item,
         passage_date: formatToDateOnly(item.passage_date),
         predicted_hour: formatHourTo24h(item.predicted_hour),
-        predicted_hour_minutes: timeToMinutes(formatHourTo24h(item.predicted_hour)), // Add minutes for chart
+        predicted_hour_minutes: timeToMinutes(formatHourTo24h(item.predicted_hour)), // for chart
       }));
 
       setPredictions(formattedData);
@@ -381,9 +406,22 @@ const tollNameMapping = {
     try {
       const formattedDate = forecastDate.replace(/-/g, '');
       const response = await fetch(
-        `http://localhost:9115/api/forecast/${selectedCompany}/${formattedDate}`
+        `http://localhost:9115/api/forecast/${selectedCompany}/${formattedDate}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-observatory-auth': token, 
+          },
+        }
       );
-      if (!response.ok) throw new Error('Failed to fetch forecast');
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('Unauthorized request. Please login again.');
+        } else {
+          throw new Error('Failed to fetch forecast');
+        }
+      }
       const data = await response.json();
 
       // Transform backend response
@@ -406,7 +444,7 @@ const tollNameMapping = {
 
   const handleDatePickerChange = (field, date) => {
     if (!date) return;
-    const formattedValue = date.toISOString().split('T')[0]; // Convert to yyyy-mm-dd
+    const formattedValue = date.toISOString().split('T')[0]; // yyyy-mm-dd
     setDateRange((prev) => ({ ...prev, [field]: formattedValue }));
   };
 
@@ -420,6 +458,7 @@ const tollNameMapping = {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">Προβλέψεις Κυκλοφορίας</h1>
 
+      {/* === Training Section === */}
       <div className="mb-8 p-6 border rounded bg-white">
         <h2 className="text-xl font-bold mb-4">Εκπαίδευση Μοντέλων</h2>
         <button
@@ -436,6 +475,7 @@ const tollNameMapping = {
         )}
       </div>
 
+      {/* === Prediction / Forecast Selection === */}
       <div className="p-6 border rounded bg-white">
         <h2 className="text-xl font-bold mb-4">Επιλογή Πρόβλεψης</h2>
         <div className="mb-4">
@@ -454,6 +494,7 @@ const tollNameMapping = {
           </select>
         </div>
 
+        {/* === PREDICTIONS === */}
         {selectedFunctionality === 'predictions' && (
           <>
             <h2 className="text-xl font-bold mb-4">Πρόβλεψη ώρας αιχμής</h2>
@@ -505,6 +546,7 @@ const tollNameMapping = {
           </>
         )}
 
+        {/* === FORECAST === */}
         {selectedFunctionality === 'forecast' && (
           <>
             <h2 className="text-xl font-bold mb-4">Πρόβλεψη μέγιστης ροής οχημάτων</h2>
@@ -544,12 +586,14 @@ const tollNameMapping = {
           </>
         )}
 
+        {/* === ERROR HANDLING === */}
         {error && (
           <div className="mt-4 p-4 bg-red-100 border border-red-400 rounded text-red-700">
             {error}
           </div>
         )}
 
+        {/* === RESULTS FOR PREDICTIONS === */}
         {predictions.length > 0 && selectedFunctionality === 'predictions' && (
           <div className="mt-6">
             <h3 className="text-lg font-bold mb-4">Αποτελέσματα πρόβλεψης</h3>
@@ -576,12 +620,10 @@ const tollNameMapping = {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="passage_date" />
                 <YAxis
-                  domain={[0, 1440]} // Set Y-axis range to 0–1440 minutes (24 hours)
-                  tickFormatter={minutesToTime} // Format ticks as 24-hour time
+                  domain={[0, 1440]} // 0–1440 minutes in a day
+                  tickFormatter={minutesToTime}
                 />
-                <Tooltip
-                  formatter={(value) => minutesToTime(value)} // Format tooltip as 24-hour time
-                />
+                <Tooltip formatter={(value) => minutesToTime(value)} />
                 <Legend />
                 <Line
                   type="monotone"
@@ -602,6 +644,7 @@ const tollNameMapping = {
           </div>
         )}
 
+        {/* === RESULTS FOR FORECAST === */}
         {forecastData.length > 0 && selectedFunctionality === 'forecast' && (
           <div className="mt-6">
             <h3 className="text-lg font-bold mb-4">
