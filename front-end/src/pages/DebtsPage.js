@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 
+// Reusable components (DebtSection, CsvSection) remain the same
+// as in your original code — no need to change them unless you want
+// additional checks/behavior based on authentication.
+
 const DebtSection = ({ title, html, sectionKey }) => {
   const handleDownload = () => {
     const blob = new Blob([html], { type: "text/html" });
@@ -112,17 +116,29 @@ const CsvSection = ({ title, csvData }) => {
   );
 };
 
-
-
 const DebtsPage = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:9115/api/get_debts_optimization")
+    // 1. Retrieve the token from localStorage
+    const token = localStorage.getItem("token");
+
+    // 2. Make an authenticated request including the token in headers
+    fetch("http://localhost:9115/api/get_debts_optimization", {
+      headers: {
+        "Content-Type": "application/json",
+        "x-observatory-auth": token, // <-- Attach the JWT here
+      },
+    })
       .then(async (response) => {
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+          // For 401/403, you might handle unauthorized or forbidden response
+          if (response.status === 401 || response.status === 403) {
+            throw new Error(`Unauthorized request (status ${response.status}).`);
+          } else {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
         }
         const result = await response.json();
         console.log(result); // Debugging line
@@ -192,7 +208,10 @@ const DebtsPage = () => {
         />
       </div>
 
-      <CsvSection title="Graph Data (graph2.csv)" csvData={data.csv} />
+      <CsvSection
+        title="Graph Data (graph2.csv)"
+        csvData={data.csv}
+      />
     </div>
   );
 };
