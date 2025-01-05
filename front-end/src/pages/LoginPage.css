@@ -1,0 +1,32 @@
+/* LoginPage.css */
+.login-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: url('../assets/tollll.webp') no-repeat center center;
+    background-size: cover;
+    height: 88vh; /* Adjust height if necessary */
+  }
+  
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+  }
+  
+  .login-form input {
+    margin: 10px 0;
+    padding: 10px;
+    font-size: 16px;
+  }
+  
+  .login-button {
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .login-page h2 {
+    color: #ffffff; /* Replace with your desired color */
+    text-align: center; /* Optional: centers the text */
+    font-size: 24px; /* Optional: adjust size */
+}

@@ -1,0 +1,85 @@
+/* Leaflet CSS */
+@import "leaflet/dist/leaflet.css";
+
+/* MarkerCluster CSS */
+@import "leaflet.markercluster/dist/MarkerCluster.css";
+@import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+
+/* Map Container */
+#map {
+  height: 500px;
+  width: 100%;
+}
+
+/* Reset all popup defaults */
+.leaflet-popup,
+.leaflet-popup-content-wrapper,
+.leaflet-popup-content {
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Hide default close button */
+.leaflet-popup-close-button {
+  display: none !important;
+}
+
+/* Hide popup tip */
+.leaflet-popup-tip-container {
+  display: none !important;
+}
+
+/* Custom popup styling */
+.popup-content {
+  position: relative;
+  background-color: white;
+  border: 2px solid #0066cc;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  min-width: 250px;
+  max-width: 300px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Custom close button */
+.popup-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+  color: #666;
+  cursor: pointer;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.popup-close:hover {
+  color: #333;
+}
+
+.popup-content strong {
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.popup-content a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.popup-content a:hover {
+  text-decoration: underline;
+}
