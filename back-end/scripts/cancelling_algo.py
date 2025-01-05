@@ -200,7 +200,8 @@ if __name__ == "__main__":
         # Write the rows
         for debtor, creditors in graph2.items():
             for creditor, amount in creditors.items():
-                writer.writerow([debtor, creditor, amount])
+                if amount != 0.0:
+                    writer.writerow([debtor, creditor, amount])
 
     print(f"Graph2 successfully written to {output_path}")
     
