@@ -6,7 +6,7 @@ const util = require('util');
 
 const get_figures = async (req, res) => {
     // Check the format query parameter
-    const format = req.query.format;
+    const format = req.query.format || 'json';
     if (format !== 'csv' && format !== 'json') {
         return res.status(400).json({
             error: 'Invalid format. Must be either "csv" or "json".',
