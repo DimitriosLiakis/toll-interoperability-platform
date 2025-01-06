@@ -1,5 +1,13 @@
 const dotenv = require('dotenv');
 dotenv.config();
+//check for the conection of db
+console.log('Database Config:');
+console.log('Host:', process.env.HOST);
+console.log('User:', process.env.DUSER);
+console.log('Password:', process.env.PASSWORD ? 'Set' : 'Not Set');
+console.log('Database:', process.env.DATABASE);
+console.log('Port:', process.env.DB_PORT);
+
 const fs = require('fs');
 const path = require('path'); // To handle folder paths
 const { Parser } = require('json2csv');
@@ -137,8 +145,10 @@ class DbService {
 
     async getUser(user_email) {
         try {
+            console.log('Fetching user with email:', user_email);
             const query = `SELECT * FROM user_login WHERE user_email = ?`;
             const [rows] = await promisePool.query(query, [user_email]);
+            console.log('Query result:', rows);
             return rows[0];
         } catch (error) {
             console.error('Error in getUser:', error.message);

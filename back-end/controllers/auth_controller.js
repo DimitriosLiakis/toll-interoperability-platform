@@ -8,6 +8,7 @@ const dbService = db.getDbServiceInstance();
 const authenticate = async (req, res) => {
     const { user_email, user_password } = req.body;    
     if (!user_email || !user_password) {
+      console.error('Missing email or password in request body.');
       return res.status(400).json({error: 'Please enter both email and password'}) ;
     }
 
@@ -15,21 +16,23 @@ const authenticate = async (req, res) => {
         const user = await dbService.getUser(user_email);
         console.log('User fetched:', user); // Debugging
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+          console.error('User not found in database.');
+          return res.status(404).json({ error: 'User not found' });
         }
         const isMatch = await bcrypt.compare(user_password, user.user_password);
         console.log('Password match:', isMatch); // Debugging
         if (!isMatch) {
-            return res.status(401).json({ error: 'Invalid password' });
+          console.error('Invalid password.');
+          return res.status(401).json({ error: 'Invalid password' });
         }
-
         const payload = {
             user_id: user.user_id,
             user_email: user.user_email,
             user_role: user.user_role
         };
-
+        console.log('Generating JWT token...');
         const token = jwt.sign(payload, process.env.SECRET_KEY || 'mySuperSecretKey', { expiresIn: '1h' });
+        console.log('Authentication successful.');
         return res.status(200).json({ message: 'Authentication successful', token });
     } catch (err) {
         //console.error(err);
@@ -48,9 +51,10 @@ const logout = (req, res) => {
 
   try {
     jwt.verify(token, process.env.SECRET_KEY);
-
+    console.log('Token verified. Logout successful.');
     return res.status(200).json({ message: 'Logout Successful' });
   } catch(error) {
+    console.error('Invalid Token:', error);
     return res.status(400).json({ error: 'Invalid Token' });
   }
 }
