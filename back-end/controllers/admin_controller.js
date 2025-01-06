@@ -2,6 +2,7 @@ const dbService = require("../dbService");
 const fs = require("fs");
 const path = require("path");
 const csvParser = require("csv-parser");
+const { exec } = require("child_process");
 
 exports.healthcheck = async (req, res) => {
   try {
@@ -71,4 +72,55 @@ const readCSVFile = (filePath) => {
             .on("end", () => resolve(data))
             .on("error", (err) => reject(err));
     });
+};
+
+
+exports.resetPasses = async (req, res) => {
+    const dbServiceInstance = DbService.getDbServiceInstance();
+
+    try {
+        // Clear Debt and Passages tables
+        await dbServiceInstance.resetPasses();
+
+        // Optional: Initialize the admin account
+        await dbServiceInstance.initializeAdminAccount();
+
+        res.status(200).json({ status: "OK" });
+    } catch (error) {
+        console.error("Error resetting passes:", error.message);
+        res.status(500).json({ status: "failed", info: error.message });
+    }
+};
+
+exports.addPasses = async (req, res) => {
+    try {
+        // Ensure a file was uploaded
+        if (!req.file) {
+            return res.status(400).json({ status: "failed", info: "No file uploaded" });
+        }
+
+        const filePath = req.file.path; // Path to the uploaded file
+        const pythonScript = path.join(__dirname, "../scripts/add_passages.py"); // Path to the Python script
+
+        // Execute the Python script
+        exec(`python3 ${pythonScript} ${filePath}`, (error, stdout, stderr) => {
+            // Handle errors from the Python script
+            if (error) {
+                console.error(`Python script error: ${stderr}`);
+                return res.status(500).json({ status: "failed", info: stderr.trim() });
+            }
+
+            // Log Python script output and return success
+            console.log(`Python script output: ${stdout}`);
+            res.status(200).json({ status: "OK" });
+
+            // Remove the uploaded file after processing
+            fs.unlink(filePath, (err) => {
+                if (err) console.error(`Failed to delete file: ${filePath}`);
+            });
+        });
+    } catch (error) {
+        console.error(`Error in addPasses: ${error.message}`);
+        res.status(500).json({ status: "failed", info: error.message });
+    }
 };

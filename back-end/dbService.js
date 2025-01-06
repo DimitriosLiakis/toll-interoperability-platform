@@ -354,6 +354,25 @@ ORDER BY grouped.passage_date;
             connection.release();
         }
     }
+    
+    async resetPasses() {
+        const connection = await promisePool.getConnection();
+        try {
+            await connection.beginTransaction();
+    
+            // Clear Debt and Passages tables
+            await connection.query("DELETE FROM Debt");
+            await connection.query("DELETE FROM Passages");
+    
+            await connection.commit();
+        } catch (error) {
+            await connection.rollback();
+            console.error("Error in resetPasses:", error.message);
+            throw error;
+        } finally {
+            connection.release();
+        }
+    }
 }
 
 module.exports = DbService;
