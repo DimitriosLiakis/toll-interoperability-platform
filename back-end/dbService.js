@@ -292,6 +292,68 @@ ORDER BY grouped.passage_date;
             throw error;
         }
     }
+
+    async getDatabaseStats() {
+        try {
+            // Fetch the counts from respective tables
+            const [stations] = await promisePool.query("SELECT COUNT(*) AS count FROM Toll");
+            const [tags] = await promisePool.query("SELECT COUNT(*) AS count FROM Tags");
+            const [passes] = await promisePool.query("SELECT COUNT(*) AS count FROM Passages");
     
+            // Return the stats in the desired format
+            return {
+                n_stations: stations[0].count,
+                n_tags: tags[0].count,
+                n_passes: passes[0].count,
+            };
+        } catch (error) {
+            console.error('Error in getDatabaseStats:', error.message);
+            throw error;
+        }
+    }
+
+    async resetTollStations(stationsData) {
+        const connection = await promisePool.getConnection();
+        try {
+            await connection.beginTransaction();
+    
+            // Clear the existing toll stations data
+            await connection.query("DELETE FROM Toll");
+    
+            // Insert new toll stations data
+            const insertQuery = `
+                INSERT INTO Toll (
+                    OpID, Operator, TollID, Name, PM, Locality, Road, Lat, Long, Email, Price1, Price2, Price3, Price4
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+            for (const station of stationsData) {
+                await connection.query(insertQuery, [
+                    station.OpID,
+                    station.Operator,
+                    station.TollID,
+                    station.Name,
+                    station.PM,
+                    station.Locality,
+                    station.Road,
+                    station.Lat,
+                    station.Long,
+                    station.Email,
+                    station.Price1,
+                    station.Price2,
+                    station.Price3,
+                    station.Price4,
+                ]);
+            }
+    
+            await connection.commit();
+        } catch (error) {
+            await connection.rollback();
+            console.error("Error in resetTollStations:", error.message);
+            throw error;
+        } finally {
+            connection.release();
+        }
+    }
 }
+
 module.exports = DbService;

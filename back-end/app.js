@@ -26,6 +26,7 @@ const forecast = require('./routers/forecast_router');
 const authRouter = require('./routers/auth_router');
 const training = require('./routers/training_router');
 const peak_hour = require('./routers/peak_hour_router');
+const adminRouter = require('./routers/admin_router');
 // Use the routes
 // --- use case 1 ---
 app.use('/api/passing_toll', passing_toll_routes);
@@ -48,7 +49,8 @@ app.use('/api', tollRouter);
 app.use('/api/forecast', forecast);
 app.use('/api/peak_hour', peak_hour);
 app.use('/api/training', training);
-
+// Admin routes
+app.use('/api/admin', adminRouter);
 // Root route
 app.get('/', (req, res) => {
     res.send('Simple root-route');
