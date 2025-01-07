@@ -11,7 +11,7 @@ console.log('Port:', process.env.DB_PORT);
 const fs = require('fs');
 const path = require('path'); // To handle folder paths
 const { Parser } = require('json2csv');
-
+const bcrypt = require("bcrypt");
 const mysql = require('mysql2');
 
 // Create a connection pool instead of a single connection
@@ -141,8 +141,6 @@ class DbService {
             throw error;
         }
     }
-
-
     async getUser(user_email) {
         try {
             console.log('Fetching user with email:', user_email);
@@ -154,7 +152,6 @@ class DbService {
             console.error('Error in getUser:', error.message);
         }
     }
-
     async tollstations(company_id) {
         try {
             const query = `
@@ -167,7 +164,6 @@ class DbService {
             throw error;
         }
     }
-
     async data_for_nop(company_id) {
         try {
             const query = `
@@ -195,7 +191,6 @@ class DbService {
             throw error;
         }
     }
-
     async data_for_peak_hour(company_id) {
         try {
             const query = `
@@ -226,8 +221,6 @@ class DbService {
             throw error;
         }
     }
-    
-
     async peak_input_data(company_id, DateFrom, DateTo) {
         try {
             const query = `
@@ -246,7 +239,6 @@ class DbService {
             throw error;
         }
     }
-
     async getUser(user_email){
         try {
             const query = `SELECT * FROM users WHERE user_email = ?`;
@@ -256,7 +248,6 @@ class DbService {
             console.error('Error in getUser:', error.message);
         }
     }
-    
     async get_most_passages_for_date_and_company(company_id) {
         try {
             const query = `
@@ -302,12 +293,11 @@ ORDER BY grouped.passage_date;
             throw error;
         }
     }
-
     async getDatabaseStats() {
         try {
             // Fetch the counts from respective tables
             const [stations] = await promisePool.query("SELECT COUNT(*) AS count FROM Toll");
-            const [tags] = await promisePool.query("SELECT COUNT(*) AS count FROM Tags");
+            const [tags] = await promisePool.query("SELECT COUNT(*) AS count FROM Transceiver");
             const [passes] = await promisePool.query("SELECT COUNT(*) AS count FROM Passages");
     
             // Return the stats in the desired format
@@ -321,38 +311,46 @@ ORDER BY grouped.passage_date;
             throw error;
         }
     }
-
-    async resetTollStations(stationsData) {
+    async resetTollStations() {
         const connection = await promisePool.getConnection();
         try {
             await connection.beginTransaction();
     
-            // Clear the existing toll stations data
+            // Clear dependent rows in Debt and Passages tables
+            await connection.query("DELETE FROM Debt");
+            await connection.query("DELETE FROM Passages");
+    
+            // Clear Toll table
             await connection.query("DELETE FROM Toll");
     
-            // Insert new toll stations data
-            const insertQuery = `
-                INSERT INTO Toll (
-                    OpID, Operator, TollID, Name, PM, Locality, Road, Lat, Long, Email, Price1, Price2, Price3, Price4
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `;
-            for (const station of stationsData) {
-                await connection.query(insertQuery, [
-                    station.OpID,
-                    station.Operator,
-                    station.TollID,
-                    station.Name,
-                    station.PM,
-                    station.Locality,
-                    station.Road,
-                    station.Lat,
-                    station.Long,
-                    station.Email,
-                    station.Price1,
-                    station.Price2,
-                    station.Price3,
-                    station.Price4,
-                ]);
+            // Insert data from the CSV file into the Toll table
+            const csvFilePath = path.join(__dirname, "./uploads/tolls.csv");
+            const csvData = fs.readFileSync(csvFilePath, "utf-8");
+    
+            const rows = csvData.split("\n").slice(1).filter(Boolean); // Skip header row
+            for (const row of rows) {
+                const [
+                    OpID,
+                    Operator,
+                    TollID,
+                    Name,
+                    PM,
+                    Locality,
+                    Road,
+                    Lat,
+                    Long,
+                    Email,
+                    Price1,
+                    Price2,
+                    Price3,
+                    Price4,
+                ] = row.split(",");
+    
+                await connection.query(
+                    `INSERT INTO Toll (Toll_id, Latitude, Longitude, Name, Locality, Road, Operator, OpID, Email, Price1, Price2, Price3, Price4)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [TollID, Lat, Long, Name, Locality, Road, Operator, OpID, Email, Price1, Price2, Price3, Price4]
+                );
             }
     
             await connection.commit();
@@ -383,6 +381,40 @@ ORDER BY grouped.passage_date;
             connection.release();
         }
     }
+    async initializeAdminAccount() {
+        const connection = await promisePool.getConnection();
+        try {
+            await connection.beginTransaction();
+    
+            // Hash the password for "freepasses4all"
+            const hashedPassword = await bcrypt.hash("freepasses4all", 10);
+    
+            // Check if the admin account exists
+            const [rows] = await connection.query("SELECT * FROM users WHERE user_email = 'admin@yme.gov.gr'");
+            if (rows.length === 0) {
+                // Insert the admin account if it doesn't exist
+                await connection.query(
+                    "INSERT INTO users (user_email, user_password, user_role) VALUES (?, ?, ?)",
+                    ["admin@yme.gov.gr", hashedPassword, "admin"]
+                );
+                console.log("Admin account initialized");
+            } else {
+                // Update the password of the existing admin account
+                await connection.query(
+                    "UPDATE users SET user_password = ? WHERE user_email = ?",
+                    [hashedPassword, "admin@yme.gov.gr"]
+                );
+                console.log("Admin account password updated");
+            }
+    
+            await connection.commit();
+        } catch (error) {
+            await connection.rollback();
+            console.error("Error in initializeAdminAccount:", error.message);
+            throw error;
+        } finally {
+            connection.release();
+        }
+    }   
 }
-
 module.exports = DbService;

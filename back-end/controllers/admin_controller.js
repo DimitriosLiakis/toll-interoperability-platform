@@ -1,34 +1,35 @@
-const dbService = require("../dbService");
+const DbService = require("../dbService");
 const fs = require("fs");
 const path = require("path");
 const csvParser = require("csv-parser");
 const { exec } = require("child_process");
 
 exports.healthcheck = async (req, res) => {
-  try {
-    // Fetch database stats
-    const { connectionString, stats } = await dbService.getDatabaseStats();
+    const dbServiceInstance = DbService.getDbServiceInstance();
+    try {
+        const stats = await dbServiceInstance.getDatabaseStats();
 
-    res.status(200).json({
-      status: "OK",
-      dbconnection: connectionString,
-      n_stations: stats.n_stations,
-      n_tags: stats.n_tags,
-      n_passes: stats.n_passes,
-    });
-  } catch (error) {
-    console.error("Healthcheck Error:", error.message);
+        res.status(200).json({
+            status: "OK",
+            dbconnection: process.env.DATABASE || "Unknown",
+            n_stations: stats.n_stations,
+            n_tags: stats.n_tags,
+            n_passes: stats.n_passes,
+        });
+    } catch (error) {
+        console.error("Healthcheck Error:", error.message);
 
-    res.status(401).json({
-      status: "failed",
-      dbconnection: error.connectionString || "Unknown",
-    });
-  }
+        res.status(401).json({
+            status: "failed",
+            dbconnection: process.env.DATABASE || "Unknown",
+            info: error.message,
+        });
+    }
 };
-
+  
 exports.resetStations = async (req, res) => {
     const dbServiceInstance = DbService.getDbServiceInstance();
-    const csvFilePath = path.join(__dirname, "../data/tollstations2024.csv");
+    const csvFilePath = path.join(__dirname, "../uploads/tolls.csv");
 
     try {
         // Read and parse the CSV file
@@ -73,8 +74,6 @@ const readCSVFile = (filePath) => {
             .on("error", (err) => reject(err));
     });
 };
-
-
 exports.resetPasses = async (req, res) => {
     const dbServiceInstance = DbService.getDbServiceInstance();
 
@@ -91,33 +90,30 @@ exports.resetPasses = async (req, res) => {
         res.status(500).json({ status: "failed", info: error.message });
     }
 };
-
 exports.addPasses = async (req, res) => {
     try {
-        // Ensure a file was uploaded
-        if (!req.file) {
-            return res.status(400).json({ status: "failed", info: "No file uploaded" });
+        // Define the predefined file path
+        const filePath = path.join(__dirname, "../uploads/passages.csv");
+        console.log("Using predefined file:", filePath);
+
+        // Check if the file exists
+        if (!fs.existsSync(filePath)) {
+            console.error("File not found:", filePath);
+            return res.status(400).json({ status: "failed", info: "File not found: passages.csv" });
         }
 
-        const filePath = req.file.path; // Path to the uploaded file
-        const pythonScript = path.join(__dirname, "../scripts/add_passages.py"); // Path to the Python script
+        const pythonScript = path.join(__dirname, "../scripts/csv_to_mysql.py");
+        console.log("Python Script Path:", pythonScript);
 
-        // Execute the Python script
+        // Execute the Python script to process the file
         exec(`python3 ${pythonScript} ${filePath}`, (error, stdout, stderr) => {
-            // Handle errors from the Python script
             if (error) {
                 console.error(`Python script error: ${stderr}`);
                 return res.status(500).json({ status: "failed", info: stderr.trim() });
             }
 
-            // Log Python script output and return success
             console.log(`Python script output: ${stdout}`);
             res.status(200).json({ status: "OK" });
-
-            // Remove the uploaded file after processing
-            fs.unlink(filePath, (err) => {
-                if (err) console.error(`Failed to delete file: ${filePath}`);
-            });
         });
     } catch (error) {
         console.error(`Error in addPasses: ${error.message}`);
