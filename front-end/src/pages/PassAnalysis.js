@@ -253,21 +253,14 @@ const PassAnalysis = () => {
             {format === 'csv' && csvData && (
                 <div className="csv-download-section">
                     <h3>Λήψη CSV</h3>
-                    <CSVLink
-                        data={data.passList}
-                        headers={[
-                            { label: 'Δείκτης Διέλευσης', key: 'passIndex' },
-                            { label: 'Κωδικός Διέλευσης', key: 'passID' },
-                            { label: 'Κωδικός Σταθμού', key: 'stationID' },
-                            { label: 'Χρονική Σήμανση', key: 'timestamp' },
-                            { label: 'Κωδικός Ετικέτας', key: 'tagID' },
-                            { label: 'Κόστος Διέλευσης', key: 'passCharge' },
-                        ]}
-                        filename={`analysis_${stationOpID}_${tagOpID}_${dateFrom}_${dateTo}.csv`}
+                    {/* Using a standard <a> tag for downloading the CSV Blob */}
+                    <a
+                        href={csvData}
+                        download={`analysis_${stationOpID}_${tagOpID}_${dateFrom}_${dateTo}.csv`}
                         className="download-link"
                     >
                         Κατεβάστε το CSV
-                    </CSVLink>
+                    </a>
                 </div>
             )}
         </div>
