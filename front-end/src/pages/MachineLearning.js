@@ -397,8 +397,6 @@ export default function MLDashboard() {
             throw new Error('Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.');
           case 401:
             throw new Error('Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά.');
-          case 403:
-            throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για αυτή την ενέργεια.');
           case 404:
             throw new Error('Η ζητούμενη πόρος δεν βρέθηκε.');
           case 500:
@@ -462,8 +460,6 @@ export default function MLDashboard() {
             throw new Error('Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.');
           case 401:
             throw new Error('Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά.');
-          case 403:
-            throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για αυτή την ενέργεια.');
           case 404:
             throw new Error('Η ζητούμενη πόρος δεν βρέθηκε.');
           case 500:
@@ -528,8 +524,6 @@ export default function MLDashboard() {
             throw new Error('Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.');
           case 401:
             throw new Error('Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά.');
-          case 403:
-            throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για αυτή την ενέργεια.');
           case 404:
             throw new Error('Η ζητούμενη πόρος δεν βρέθηκε.');
           case 500:
