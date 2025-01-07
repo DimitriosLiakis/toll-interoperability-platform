@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+// src/MLDashboard.js
+import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './MachineLearning.css';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 
 // Helper function to format dates as dd/mm/yyyy
 const formatDate = (dateString) => {
@@ -10,12 +12,16 @@ const formatDate = (dateString) => {
   const [year, month, day] = dateString.split('-');
   return `${day}/${month}/${year}`;
 };
+
+// Helper function to format hour to 24-hour format (HH:MM)
 const formatHourTo24h = (hour) => {
   const totalMinutes = Math.round(hour * 60);
   const hours = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
   const minutes = (totalMinutes % 60).toString().padStart(2, '0');
   return `${hours}:${minutes}`;
 };
+
+// Helper function to format datetime string to date only (dd/mm/yyyy)
 const formatToDateOnly = (dateTimeString) => {
   if (!dateTimeString) return '';
   
@@ -308,6 +314,8 @@ export default function MLDashboard() {
   const [forecastDate, setForecastDate] = useState('');
   const [selectedFunctionality, setSelectedFunctionality] = useState('');
 
+  const navigate = useNavigate(); // Hook for navigation
+
   const companies = [
     { value: 'AM', label: 'Αυτοκινητόδρομος Αιγαίου' },
     { value: 'EG', label: 'Εγνατία Οδός' },
@@ -323,6 +331,42 @@ export default function MLDashboard() {
     { value: 'predictions', label: 'Πρόβλεψη ώρας αιχμής' },
     { value: 'forecast', label: 'Πρόβλεψη μέγιστης ροής οχημάτων' },
   ];
+
+  // Function to handle logout (remove token and redirect to login)
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
+  // Check token validity on component mount
+  useEffect(() => {
+    const checkToken = () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        // No token found, redirect to login
+        navigate('/login');
+        return;
+      }
+
+      try {
+        // Decode the token to get payload
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+
+        if (payload.exp && payload.exp < currentTime) {
+          // Token expired
+          alert('Η συνεδρία σας έχει λήξει. Παρακαλώ συνδεθείτε ξανά.');
+          handleLogout();
+        }
+      } catch (err) {
+        console.error('Invalid token:', err);
+        alert('Μη έγκυρο token. Παρακαλώ συνδεθείτε ξανά.');
+        handleLogout();
+      }
+    };
+
+    checkToken();
+  }, [navigate]);
 
   // 1. Include the token in all your fetch calls by default
   const token = localStorage.getItem('token');
@@ -340,11 +384,37 @@ export default function MLDashboard() {
           'x-observatory-auth': token, 
         },
       });
-      if (!response.ok) throw new Error('Training failed');
-      await response.json(); // If your backend returns a success message
-      setTrainingStatus('Training completed successfully');
+
+      if (response.status === 200) {
+        const data = await response.json(); // If your backend returns a success message
+        setTrainingStatus('Training completed successfully');
+      } else if (response.status === 204) {
+        setError('Η εκπαίδευση ολοκληρώθηκε, αλλά δεν επέστρεψε δεδομένα.');
+      } else {
+        // Handle specific status codes
+        switch (response.status) {
+          case 400:
+            throw new Error('Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.');
+          case 401:
+            throw new Error('Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά.');
+          case 403:
+            throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για αυτή την ενέργεια.');
+          case 404:
+            throw new Error('Η ζητούμενη πόρος δεν βρέθηκε.');
+          case 500:
+            throw new Error('Προέκυψε σφάλμα στον διακομιστή. Παρακαλώ δοκιμάστε ξανά αργότερα.');
+          default:
+            throw new Error('Προέκυψε μη αναμενόμενο σφάλμα.');
+        }
+      }
     } catch (err) {
+      console.error('Error during training:', err);
       setError('Failed to train models: ' + err.message);
+
+      // Handle Unauthorized errors by logging out
+      if (err.message.includes('Unauthorized')) {
+        handleLogout();
+      }
     } finally {
       setLoading(false);
     }
@@ -352,7 +422,7 @@ export default function MLDashboard() {
 
   const getPredictions = async () => {
     if (!dateRange.from || !dateRange.to) {
-      setError('Please select date range');
+      setError('Παρακαλώ επιλέξτε εύρος ημερομηνιών.');
       return;
     }
     setLoading(true);
@@ -370,27 +440,46 @@ export default function MLDashboard() {
           },
         }
       );
-      if (!response.ok) {
-        // Optional: handle 401/403 for unauthorized
-        if (response.status === 401 || response.status === 403) {
-          throw new Error('Unauthorized request. Please login again.');
-        } else {
-          throw new Error('Failed to fetch predictions');
+
+      if (response.status === 200) {
+        const data = await response.json();
+
+        // Transform backend response
+        const formattedData = data.map((item) => ({
+          ...item,
+          passage_date: formatToDateOnly(item.passage_date),
+          predicted_hour: formatHourTo24h(item.predicted_hour),
+          predicted_hour_minutes: timeToMinutes(formatHourTo24h(item.predicted_hour)), // for chart
+        }));
+
+        setPredictions(formattedData);
+      } else if (response.status === 204) {
+        setError('Δεν επιστράφηκαν δεδομένα για τα κριτήρια που δώσατε.');
+      } else {
+        // Handle specific status codes
+        switch (response.status) {
+          case 400:
+            throw new Error('Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.');
+          case 401:
+            throw new Error('Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά.');
+          case 403:
+            throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για αυτή την ενέργεια.');
+          case 404:
+            throw new Error('Η ζητούμενη πόρος δεν βρέθηκε.');
+          case 500:
+            throw new Error('Προέκυψε σφάλμα στον διακομιστή. Παρακαλώ δοκιμάστε ξανά αργότερα.');
+          default:
+            throw new Error('Προέκυψε μη αναμενόμενο σφάλμα.');
         }
       }
-      const data = await response.json();
-
-      // Transform backend response
-      const formattedData = data.map((item) => ({
-        ...item,
-        passage_date: formatToDateOnly(item.passage_date),
-        predicted_hour: formatHourTo24h(item.predicted_hour),
-        predicted_hour_minutes: timeToMinutes(formatHourTo24h(item.predicted_hour)), // for chart
-      }));
-
-      setPredictions(formattedData);
     } catch (err) {
+      console.error('Error fetching predictions:', err);
       setError('Failed to get predictions: ' + err.message);
+
+      // Handle Unauthorized errors by logging out
+      if (err.message.includes('Unauthorized')) {
+        handleLogout();
+      }
     } finally {
       setLoading(false);
     }
@@ -398,7 +487,7 @@ export default function MLDashboard() {
 
   const getForecast = async () => {
     if (!forecastDate) {
-      setError('Please select a forecast date');
+      setError('Παρακαλώ επιλέξτε ημερομηνία πρόβλεψης.');
       return;
     }
     setLoading(true);
@@ -415,28 +504,48 @@ export default function MLDashboard() {
           },
         }
       );
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          throw new Error('Unauthorized request. Please login again.');
-        } else {
-          throw new Error('Failed to fetch forecast');
+
+      if (response.status === 200) {
+        const data = await response.json();
+
+        // Transform backend response
+        const formattedData = data.predictions.map((predictedHour, index) => {
+          const tollID = `${selectedCompany}${String(index + 1).padStart(2, '0')}`;
+          return {
+            tollID: tollID,
+            tollName: tollNameMapping[tollID] || tollID,
+            predicted_hour: Math.round(predictedHour),
+          };
+        });
+
+        setForecastData(formattedData);
+      } else if (response.status === 204) {
+        setError('Δεν επιστράφηκαν δεδομένα για την επιλεγμένη ημερομηνία.');
+      } else {
+        // Handle specific status codes
+        switch (response.status) {
+          case 400:
+            throw new Error('Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.');
+          case 401:
+            throw new Error('Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά.');
+          case 403:
+            throw new Error('Δεν έχετε τα απαραίτητα δικαιώματα για αυτή την ενέργεια.');
+          case 404:
+            throw new Error('Η ζητούμενη πόρος δεν βρέθηκε.');
+          case 500:
+            throw new Error('Προέκυψε σφάλμα στον διακομιστή. Παρακαλώ δοκιμάστε ξανά αργότερα.');
+          default:
+            throw new Error('Προέκυψε μη αναμενόμενο σφάλμα.');
         }
       }
-      const data = await response.json();
-
-      // Transform backend response
-      const formattedData = data.predictions.map((predictedHour, index) => {
-        const tollID = `${selectedCompany}${String(index + 1).padStart(2, '0')}`;
-        return {
-          tollID: tollID,
-          tollName: tollNameMapping[tollID] || tollID,
-          predicted_hour: Math.round(predictedHour),
-        };
-      });
-
-      setForecastData(formattedData);
     } catch (err) {
+      console.error('Error fetching forecast:', err);
       setError('Failed to fetch forecast: ' + err.message);
+
+      // Handle Unauthorized errors by logging out
+      if (err.message.includes('Unauthorized')) {
+        handleLogout();
+      }
     } finally {
       setLoading(false);
     }
@@ -479,7 +588,7 @@ export default function MLDashboard() {
       <div className="p-6 border rounded bg-white">
         <h2 className="text-xl font-bold mb-4">Επιλογή Πρόβλεψης</h2>
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Προβλέψεις</label>
+          <label className="block text-sm font-medium mb-1">Πρόβλεψεις</label>
           <select
             value={selectedFunctionality}
             onChange={(e) => setSelectedFunctionality(e.target.value)}
@@ -648,7 +757,7 @@ export default function MLDashboard() {
         {forecastData.length > 0 && selectedFunctionality === 'forecast' && (
           <div className="mt-6">
             <h3 className="text-lg font-bold mb-4">
-              Forecast Results for {formatDate(forecastDate)}
+              Αποτελέσματα Πρόβλεψης για {formatDate(forecastDate)}
             </h3>
             <table className="table-auto w-full border-collapse border border-gray-200 text-left">
               <thead>
