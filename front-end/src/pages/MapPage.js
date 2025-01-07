@@ -1,3 +1,4 @@
+// src/MapPage.js
 import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -6,6 +7,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet.markercluster"; // Import the markercluster plugin
 import axios from "axios";
 import "./MapPage.css";
+import { useNavigate } from "react-router-dom"; // Add this import
 
 // Fix for default icon issues in Leaflet when using with React
 import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
@@ -27,6 +29,7 @@ function Map() {
   const [filters, setFilters] = useState({ operator: "all", name: "" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate(); // Hook for navigation (assuming react-router-dom is used)
 
   // Operator translation mapping
   const operatorTranslations = {
@@ -45,8 +48,8 @@ function Map() {
     iconUrl:
       "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
     iconSize: [25, 41], // Size of the icon
-    iconAnchor: [0, 0], // Point of the icon which will correspond to marker's location (bottom center)
-    popupAnchor: [0, 0], // Point from which the popup should open relative to the iconAnchor
+    iconAnchor: [12, 41], // Point of the icon which will correspond to marker's location (bottom center)
+    popupAnchor: [0, -41], // Point from which the popup should open relative to the iconAnchor
   });
 
   // Initialize the map
@@ -84,22 +87,85 @@ function Map() {
     };
   }, []);
 
-  // Fetch toll data from API
+  // Function to handle logout (remove token and redirect to login)
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
+  // Fetch toll data from API with enhanced error handling
   useEffect(() => {
     const fetchTolls = async () => {
       try {
-        const response = await axios.get("http://localhost:9115/api/tolls");
-        setTolls(response.data);
-      } catch (error) {
-        console.error("Error fetching tolls:", error);
-        setError("Failed to load toll data. Please try again later.");
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Δεν βρέθηκε το token. Παρακαλώ συνδεθείτε ξανά.");
+          handleLogout();
+          return;
+        }
+
+        const response = await axios.get("http://localhost:9115/api/tolls", {
+          headers: {
+            "Content-Type": "application/json",
+            "x-observatory-auth": token, // Attach JWT token here
+          },
+          // Optionally, set responseType if needed
+        });
+
+        if (response.status === 200) {
+          setTolls(response.data);
+        } else if (response.status === 204) {
+          setError("Δεν επιστράφηκαν δεδομένα για τα κριτήρια που δώσατε.");
+        }
+      } catch (err) {
+        if (err.response) {
+          switch (err.response.status) {
+            case 400:
+              setError("Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.");
+              break;
+            case 401:
+              setError(
+                "Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά."
+              );
+              handleLogout();
+              break;
+            case 403:
+              setError(
+                "Δεν έχετε τα απαραίτητα δικαιώματα για αυτή την ενέργεια."
+              );
+              break;
+            case 404:
+              setError(
+                "Η ζητούμενη πόρος δεν βρέθηκε. Παρακαλώ ελέγξτε τις παραμέτρους σας."
+              );
+              break;
+            case 500:
+              setError(
+                "Προέκυψε σφάλμα στον διακομιστή. Παρακαλώ δοκιμάστε ξανά αργότερα."
+              );
+              break;
+            default:
+              setError(
+                err.response.data?.error ||
+                  "Προέκυψε μη αναμενόμενο σφάλμα."
+              );
+          }
+        } else if (err.request) {
+          // The request was made but no response was received
+          setError(
+            "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή. Παρακαλώ ελέγξτε τη σύνδεσή σας."
+          );
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          setError("Προέκυψε σφάλμα κατά την εκκίνηση του αιτήματος.");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchTolls();
-  }, []);
+  }, [navigate]);
 
   // List of operator options
   const operatorOptions = ["all", ...Object.keys(operatorTranslations)];
@@ -127,7 +193,7 @@ function Map() {
           { icon: customIcon }
         ).bindPopup(
           `<div class="popup-content">
-            <button onclick="this.closest('.leaflet-popup').remove()" class="popup-close">×</button>
+            <button class="popup-close">×</button>
             <strong>${toll.name}</strong><br/>
             <strong>Operator:</strong> ${
               operatorTranslations[toll.operator] || toll.operator
@@ -143,10 +209,23 @@ function Map() {
           }
         );
 
+        // Add event listener for the custom close button
+        marker.on("popupopen", function () {
+          const popupNode = document.querySelector(".custom-popup");
+          if (popupNode) {
+            const closeButton = popupNode.querySelector(".popup-close");
+            if (closeButton) {
+              closeButton.addEventListener("click", () => {
+                mapRef.current.closePopup();
+              });
+            }
+          }
+        });
+
         markersRef.current.addLayer(marker);
       });
     }
-  }, [filteredTolls, customIcon]);
+  }, [filteredTolls, customIcon, operatorTranslations]);
 
   // Handle filter input changes
   const handleFilterChange = (e) => {
@@ -208,7 +287,7 @@ function Map() {
       </div>
 
       {/* Loading Indicator */}
-      {loading && <p>Loading toll data...</p>}
+      {loading && <p>Φόρτωση δεδομένων διοδίων...</p>}
 
       {/* Error Message */}
       {error && <p style={{ color: "red" }}>{error}</p>}
