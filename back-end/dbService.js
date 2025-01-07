@@ -415,6 +415,38 @@ ORDER BY grouped.passage_date;
         } finally {
             connection.release();
         }
+    }
+    async getAllUsers() {
+        try {
+            const query = "SELECT user_email AS username FROM users";
+            const [rows] = await promisePool.query(query);
+            return rows;
+        } catch (error) {
+            console.error("Error in getAllUsers:", error.message);
+            throw error;
+        }
+    }
+    async createOrUpdateUser(user_email, hashedPassword) {
+        try {
+            // Check if the user already exists
+            const checkQuery = "SELECT COUNT(*) AS count FROM users WHERE user_email = ?";
+            const [rows] = await promisePool.query(checkQuery, [user_email]);
+    
+            if (rows[0].count > 0) {
+                // Update the user's password if they exist
+                const updateQuery = "UPDATE users SET user_password = ? WHERE user_email = ?";
+                await promisePool.query(updateQuery, [hashedPassword, user_email]);
+                return { modified: true };
+            } else {
+                // Create a new user if they don't exist
+                const insertQuery = "INSERT INTO users (user_email, user_password, user_role) VALUES (?, ?, 'users')";
+                await promisePool.query(insertQuery, [user_email, hashedPassword]);
+                return { created: true };
+            }
+        } catch (error) {
+            console.error("Error in createOrUpdateUser:", error.message);
+            throw error;
+        }
     }   
 }
 module.exports = DbService;

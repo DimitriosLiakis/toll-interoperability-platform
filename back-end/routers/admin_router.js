@@ -18,4 +18,7 @@ router.post(
     authorizeRole(["admin"]),
     adminController.addPasses
 );
+//Helper routers, will only be used by cli
+router.get("/users", authenticateToken, authorizeRole(["admin"]), adminController.getUsers);
+router.post("/usermod", authenticateToken, authorizeRole(["admin"]), adminController.userMod);
 module.exports = router;

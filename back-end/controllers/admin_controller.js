@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const csvParser = require("csv-parser");
 const { exec } = require("child_process");
+const bcrypt = require("bcrypt");
 
 exports.healthcheck = async (req, res) => {
     const dbServiceInstance = DbService.getDbServiceInstance();
@@ -117,6 +118,46 @@ exports.addPasses = async (req, res) => {
         });
     } catch (error) {
         console.error(`Error in addPasses: ${error.message}`);
+        res.status(500).json({ status: "failed", info: error.message });
+    }
+};
+exports.getUsers = async (req, res) => {
+    try {
+        // Call the database service to fetch all users
+        const dbServiceInstance = DbService.getDbServiceInstance();
+        const users = await dbServiceInstance.getAllUsers();
+
+        // Extract only the usernames
+        const usernames = users.map(user => user.username);
+
+        res.status(200).json({ status: "OK", users: usernames });
+    } catch (error) {
+        console.error("Error in getUsers:", error.message);
+        res.status(500).json({ status: "failed", info: error.message });
+    }
+};
+exports.userMod = async (req, res) => {
+    const { username, passw } = req.body;
+
+    if (!username || !passw) {
+        return res.status(400).json({ status: "failed", info: "Missing username or password" });
+    }
+
+    try {
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(passw, 10);
+
+        // Call the database service to create or update the user
+        const dbServiceInstance = DbService.getDbServiceInstance();
+        const result = await dbServiceInstance.createOrUpdateUser(username, hashedPassword);
+
+        if (result.modified) {
+            res.status(200).json({ status: "OK", message: `User '${username}' password updated successfully.` });
+        } else if (result.created) {
+            res.status(200).json({ status: "OK", message: `User '${username}' created successfully.` });
+        }
+    } catch (error) {
+        console.error("Error in userMod:", error.message);
         res.status(500).json({ status: "failed", info: error.message });
     }
 };
