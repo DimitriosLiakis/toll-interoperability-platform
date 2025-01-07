@@ -1,7 +1,6 @@
 // src/PassAnalysis.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { CSVLink } from 'react-csv';
 import { useNavigate } from 'react-router-dom'; // For redirection
 import './PassAnalysis.css';
 
@@ -117,22 +116,45 @@ const PassAnalysis = () => {
                 responseType: format === 'csv' ? 'blob' : 'json',
             });
 
-            if (format === 'json') {
-                setData(response.data);
-            } else if (format === 'csv') {
-                if (response.data instanceof Blob) {
-                    const csvUrl = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
-                    setCsvData(csvUrl);
-                } else {
-                    setError('Μη αναμενόμενη μορφή δεδομένων CSV.');
+            if (response.status === 200) {
+                if (format === 'json') {
+                    setData(response.data);
+                } else if (format === 'csv') {
+                    if (response.data instanceof Blob) {
+                        const csvUrl = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
+                        setCsvData(csvUrl);
+                    } else {
+                        setError('Μη αναμενόμενη μορφή δεδομένων CSV.');
+                    }
                 }
+            } else if (response.status === 204) {
+                setError('Δεν επιστράφηκαν δεδομένα για τα κριτήρια που δώσατε.');
             }
         } catch (err) {
-            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-                setError('Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά.');
-                handleLogout();
+            if (err.response) {
+                switch (err.response.status) {
+                    case 400:
+                        setError('Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.');
+                        break;
+                    case 401:
+                        setError('Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά.');
+                        handleLogout();
+                        break;
+                    case 404:
+                        setError('Η ζητούμενη πόρος δεν βρέθηκε. Παρακαλώ ελέγξτε τις παραμέτρους σας.');
+                        break;
+                    case 500:
+                        setError('Προέκυψε σφάλμα στον διακομιστή. Παρακαλώ δοκιμάστε ξανά αργότερα.');
+                        break;
+                    default:
+                        setError(err.response.data?.error || 'Προέκυψε μη αναμενόμενο σφάλμα.');
+                }
+            } else if (err.request) {
+                // The request was made but no response was received
+                setError('Δεν ήταν δυνατή η σύνδεση με τον διακομιστή. Παρακαλώ ελέγξτε τη σύνδεσή σας.');
             } else {
-                setError(err.response?.data?.error || 'Προέκυψε σφάλμα κατά την ανάκτηση των δεδομένων.');
+                // Something happened in setting up the request that triggered an Error
+                setError('Προέκυψε σφάλμα κατά την εκκίνηση του αιτήματος.');
             }
         } finally {
             setLoading(false);
@@ -264,8 +286,8 @@ const PassAnalysis = () => {
                 </div>
             )}
         </div>
-    ); // <-- Close the return statement
+    );
 
-}; // <-- Close the PassAnalysis component
+}; 
 
 export default PassAnalysis;
