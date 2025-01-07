@@ -4,8 +4,10 @@ const { Command } = require('commander');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const dotenv = require('dotenv').config();
 
 const program = new Command();
+let jwtToken = null; // Μεταβλητή μνήμης για το JWT token
 
 program
   .name('se2414')
@@ -13,72 +15,160 @@ program
   .version('1.0.0');
 
 
-const BASE_URL = 'http://localhost:9115/'; // May need some changes
+const BASE_URL = 'http://localhost:9115/api/';
+const TOKEN_FILE = path.join(__dirname, 'token.json');
 
-// Path to user storage and token file
-const usersPath = path.resolve(__dirname, 'users.json');
-const tokenPath = path.resolve(__dirname, 'token.json');
+// Αποθήκευση Token
+function saveToken(token) {
+  fs.writeFileSync(TOKEN_FILE, JSON.stringify({ token }, null, 2));
+}
 
-// Helper function to call REST API
-const callApi = async (endpoint, method = 'GET', data = null, headers = {}) => {
-  try {
-    const response = await axios({
-      url: `${BASE_URL}${endpoint}`,
-      method,
-      data,
-      headers,
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error:', error.response?.data || error.message);
-    process.exit(1);
+// Φόρτωση Token
+function loadToken() {
+  if (fs.existsSync(TOKEN_FILE)) {
+    const data = JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf8'));
+    return data.token;
   }
-};
+  return null;
+}
 
-// Helper function to read users from users.json
-const loadUsers = () => {
-    if (!fs.existsSync(usersPath)) {
-      console.error('Error: users.json not found. Please create it with a list of users.');
-      process.exit(1);
-    }
-    const usersData = fs.readFileSync(usersPath, 'utf8');
-    try {
-      return JSON.parse(usersData);
-    } catch (error) {
-      console.error('Error parsing users.json:', error.message);
-      process.exit(1);
-    }
-};
-
-// Helper function to ensure the user has admin privileges
-const ensureAdminRole = () => {
-  const currentUser = getCurrentUser();
-  if (currentUser.role !== 'admin') {
-    throw new LogicalError('You do not have permission to execute this command. Admin privileges are required.');
+// Διαγραφή Token
+function deleteToken() {
+  if (fs.existsSync(TOKEN_FILE)) {
+    fs.unlinkSync(TOKEN_FILE);
   }
-};
+}
 
+// Εντολή login
 program
   .command('login')
-  .description('Log in as a user')
-  .requiredOption('--username <username>', 'Username')
-  .requiredOption('--passw <password>', 'Password')
+  .description('Authenticate and obtain a JWT token')
+  .requiredOption('--username <user_email>', 'Email for login') // Adjusted description
+  .requiredOption('--passw <user_password>', 'Password for login') // Adjusted description
   .action(async (options) => {
-    const { username, passw } = options;
+    try {
+      const response = await axios.post(`${BASE_URL}login`, {
+        user_email: options.username, // Use user_email instead of username
+        user_password: options.passw, // Use user_password instead of password
+      });
 
-    // Check if a user is already logged in
-    if (fs.existsSync(tokenPath)) {
-      const tokenData = JSON.parse(fs.readFileSync(tokenPath, 'utf8'));
-      console.error(`You are already logged in as '${tokenData.username}'. Please logout before logging in as a new user.`);
+      if (response.data && response.data.token) {
+        jwtToken = response.data.token; // Store the token in memory
+        console.log('Login successful! Token acquired.');
+      } else {
+        console.error('Login failed: No token returned from server.');
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error(`Login failed: ${error.response.data.error || error.response.data.message}`);
+      } else {
+        console.error(`Login failed: ${error.message}`);
+      }
+    }
+});
+
+// Logout Command
+program
+  .command('logout')
+  .description('Logout and remove the JWT token')
+  .action(async () => {
+    const jwtToken = loadToken();
+    if (!jwtToken) {
+      console.error('You must login first to perform this action.');
       process.exit(1);
     }
 
-    // Simulate login logic (you can add your real API call here)
-    const tokenData = { token: `${username}-token`, username, company: 'moreas', role: 'user' };
+    try {
+      const response = await axios.post(
+        `${BASE_URL}logout`,
+        {}, // Empty body
+        {
+          headers: { 'x-observatory-auth': jwtToken }, // Pass the token
+        }
+      );
 
-    fs.writeFileSync(tokenPath, JSON.stringify(tokenData, null, 2));
-    console.log(`Logged in successfully as ${username}. Token saved.`);
+      if (response.status === 200) {
+        console.log('Logout successful!');
+        deleteToken(); // Remove token from file
+      } else {
+        console.error('Logout failed with unexpected status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Logout failed:', error.response.data.error || error.response.data.message);
+      } else {
+        console.error('Logout failed:', error.message);
+      }
+    }
+});
+
+// Εντολή healthcheck
+program
+  .command('healthcheck')
+  .description('Perform a healthcheck on the system')
+  .action(async () => {
+    if (!jwtToken) {
+      console.error('You must login first to perform this action.');
+      process.exit(1);
+    }
+
+    try {
+      const response = await axios.get(`${BASE_URL}admin/healthcheck`, {
+        headers: { 'x-observatory-auth': jwtToken }, 
+      });
+
+      if (response.status === 200) {
+        console.log('Healthcheck successful!');
+        console.log('Status:', response.data.status);
+        console.log('Database Connection:', response.data.dbconnection);
+        console.log('Number of Toll Stations:', response.data.n_stations);
+        console.log('Number of Tags:', response.data.n_tags);
+        console.log('Number of Passes:', response.data.n_passes);
+      } else {
+        console.error('Healthcheck failed with unexpected status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Healthcheck failed:', error.response.data.status || 'unknown error');
+        console.error('Database Connection:', error.response.data.dbconnection || 'unknown');
+      } else {
+        console.error('Healthcheck failed:', error.message);
+      }
+    }
   });
+
+
+// Εντολή resetpasses
+program
+  .command('resetpasses')
+  .description('Reset all toll passes (admin only)')
+  .action(async () => {
+    if (!jwtToken) {
+      console.error("You must login first to perform this action.");
+      process.exit(1);
+    }
+
+    try {
+      const response = await axios.post(
+        `${process.env.API_URL || 'http://localhost:3000'}/admin/resetpasses`,
+        {}, // Empty body
+        {
+          headers: {
+            'x-observatory-auth': jwtToken,
+          },
+        }
+      );
+      console.log(response.data.message || "Passes reset successfully.");
+    } catch (err) {
+      if (err.response) {
+        console.error(`Error: ${err.response.data.error}`);
+      } else {
+        console.error(`Error: ${err.message}`);
+      }
+      process.exit(1);
+    }
+  });
+
 
 // Scope: logout
 program
@@ -150,24 +240,6 @@ adminCommand
     console.log(`Passes from ${options.source} uploaded successfully.`);
   });
 
-// Scope: healthcheck
-program
-  .command('healthcheck')
-  .description('Check the health of the server')
-  .action(async () => {
-    const result = await callApi('/admin/healthcheck');
-    console.log(result);
-  });
-
-// Scope: resetpasses
-program
-  .command('resetpasses')
-  .description('Reset all passes data')
-  .action(async () => {
-    const result = await callApi('/admin/resetpasses', 'POST');
-    console.log(result);
-  });
-
 // Scope: resetstations
 program
   .command('resetstations')
@@ -177,32 +249,7 @@ program
     console.log(result);
   });
 
-// Scope: tollstationpasses (restricted by company)
-program
-  .command('tollstationpasses')
-  .description('Retrieve toll station passes')
-  .requiredOption('--station <station>', 'Station ID')
-  .requiredOption('--from <from>', 'Start date (YYYYMMDD)')
-  .requiredOption('--to <to>', 'End date (YYYYMMDD)')
-  .option('--format <format>', 'Response format (json/csv)', 'csv')
-  .action(async (options) => {
-    const { station, from, to, format } = options;
-    const currentUser = getCurrentUser();
 
-    if (currentUser.role !== 'admin' && currentUser.company !== station) {
-      console.error(`Error: You can only access toll station data for your company: '${currentUser.company}'.`);
-      process.exit(1);
-    }
-
-    const headers = { Authorization: `Bearer ${currentUser.token}` };
-    const result = await callApi(`/tollStationPasses?station=${station}&from=${from}&to=${to}&format=${format}`, 'GET', null, headers);
-
-    if (format === 'json') {
-      console.log(JSON.stringify(result, null, 2));
-    } else {
-      console.log(result);
-    }
-  });
 
 // Scope: passanalysis (restricted by company)
 program
