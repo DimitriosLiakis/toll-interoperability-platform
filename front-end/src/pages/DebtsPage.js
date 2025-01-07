@@ -1,9 +1,7 @@
+// src/DebtsPage.js
 import React, { useEffect, useState } from 'react';
 
-// Reusable components (DebtSection, CsvSection) remain the same
-// as in your original code — no need to change them unless you want
-// additional checks/behavior based on authentication.
-
+// Reusable components (DebtSection, CsvSection)
 const DebtSection = ({ title, html, sectionKey }) => {
   const handleDownload = () => {
     const blob = new Blob([html], { type: "text/html" });
@@ -119,36 +117,119 @@ const CsvSection = ({ title, csvData }) => {
 const DebtsPage = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true); // Track loading state
 
   useEffect(() => {
-    // 1. Retrieve the token from localStorage
-    const token = localStorage.getItem("token");
+    // Function to handle logout (remove token and redirect to login)
+    const handleLogout = () => {
+      localStorage.removeItem("token");
+      window.location.href = "/login"; // Redirect to login page
+    };
 
-    // 2. Make an authenticated request including the token in headers
-    fetch("http://localhost:9115/api/get_debts_optimization", {
-      headers: {
-        "Content-Type": "application/json",
-        "x-observatory-auth": token, // <-- Attach the JWT here
-      },
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          // For 401/403, you might handle unauthorized or forbidden response
-          if (response.status === 401 || response.status === 403) {
-            throw new Error(`Unauthorized request (status ${response.status}).`);
-          } else {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+    // Function to check token validity
+    const checkToken = () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        // No token found, redirect to login
+        handleLogout();
+        return;
+      }
+
+      try {
+        // Decode the token to get payload
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+
+        if (payload.exp && payload.exp < currentTime) {
+          // Token expired
+          alert('Η συνεδρία σας έχει λήξει. Παρακαλώ συνδεθείτε ξανά.');
+          handleLogout();
+        }
+      } catch (err) {
+        console.error('Invalid token:', err);
+        alert('Μη έγκυρο token. Παρακαλώ συνδεθείτε ξανά.');
+        handleLogout();
+      }
+    };
+
+    checkToken();
+
+    // Fetch debt data from API with enhanced error handling
+    const fetchDebtData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Δεν βρέθηκε το token. Παρακαλώ συνδεθείτε ξανά.");
+          handleLogout();
+          return;
+        }
+
+        const response = await fetch("http://localhost:9115/api/get_debts_optimization", {
+          headers: {
+            "Content-Type": "application/json",
+            "x-observatory-auth": token, // Attach the JWT here
+          },
+        });
+
+        if (response.status === 200) {
+          const result = await response.json();
+          console.log(result); // Debugging line
+          setData(result);
+        } else if (response.status === 204) {
+          setError("Δεν επιστράφηκαν δεδομένα για τα κριτήρια που δώσατε.");
+        } else {
+          // Handle specific status codes
+          switch (response.status) {
+            case 400:
+              throw new Error("Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.");
+            case 401:
+              throw new Error("Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά.");
+            case 403:
+              throw new Error("Δεν έχετε τα απαραίτητα δικαιώματα για αυτή την ενέργεια.");
+            case 404:
+              throw new Error("Η ζητούμενη πόρος δεν βρέθηκε.");
+            case 500:
+              throw new Error("Προέκυψε σφάλμα στον διακομιστή. Παρακαλώ δοκιμάστε ξανά αργότερα.");
+            default:
+              throw new Error("Προέκυψε μη αναμενόμενο σφάλμα.");
           }
         }
-        const result = await response.json();
-        console.log(result); // Debugging line
-        setData(result);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err); // Debugging line
         setError(err.message);
-      });
+
+        // Handle Unauthorized and Forbidden errors by logging out
+        if (err.message.includes('Unauthorized') || err.message.includes('Forbidden')) {
+          const handleLogout = () => {
+            localStorage.removeItem("token");
+            window.location.href = "/login"; // Redirect to login page
+          };
+          handleLogout();
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDebtData();
   }, []);
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+        }}
+      >
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -167,18 +248,7 @@ const DebtsPage = () => {
   }
 
   if (!data) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-        }}
-      >
-        <p>Loading...</p>
-      </div>
-    );
+    return null; // Or some fallback UI
   }
 
   return (
