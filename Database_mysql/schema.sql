@@ -78,7 +78,7 @@ CREATE TABLE `Debt` (
   CONSTRAINT `Debt_ibfk_2` FOREIGN KEY (`tagRef`) REFERENCES `Transceiver` (`tagRef`),
   CONSTRAINT `Debt_ibfk_3` FOREIGN KEY (`debtor_company_id`) REFERENCES `Company` (`company_id`),
   CONSTRAINT `Debt_ibfk_4` FOREIGN KEY (`creditor_company_id`) REFERENCES `Company` (`company_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5837 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -112,11 +112,11 @@ CREATE TABLE `Passages` (
   `tagHomeID` varchar(30) NOT NULL,
   `charge` decimal(5,2) NOT NULL,
   PRIMARY KEY (`passage_id`),
-  KEY `tollID` (`tollID`),
+  UNIQUE KEY `same_passage` (`tollID`,`tagRef`,`timestamp`,`tagHomeID`,`charge`),
   KEY `tagRef` (`tagRef`),
   CONSTRAINT `Passages_ibfk_1` FOREIGN KEY (`tollID`) REFERENCES `Toll` (`Toll_id`),
   CONSTRAINT `Passages_ibfk_2` FOREIGN KEY (`tagRef`) REFERENCES `Transceiver` (`tagRef`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16297 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -147,6 +147,24 @@ CREATE TABLE `Toll` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `TotalDebts`
+--
+
+DROP TABLE IF EXISTS `TotalDebts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `TotalDebts` (
+  `debtor_company_id` varchar(30) NOT NULL,
+  `creditor_company_id` varchar(30) NOT NULL,
+  `total_amount` decimal(10,2) NOT NULL DEFAULT '0.00',
+  PRIMARY KEY (`debtor_company_id`,`creditor_company_id`),
+  KEY `creditor_company_id` (`creditor_company_id`),
+  CONSTRAINT `TotalDebts_ibfk_1` FOREIGN KEY (`debtor_company_id`) REFERENCES `Company` (`company_id`),
+  CONSTRAINT `TotalDebts_ibfk_2` FOREIGN KEY (`creditor_company_id`) REFERENCES `Company` (`company_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `Transceiver`
 --
 
@@ -164,7 +182,22 @@ CREATE TABLE `Transceiver` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-ALTER TABLE Passages ADD CONSTRAINT same_passage UNIQUE (tollID, tagRef, timestamp, tagHomeID, charge);
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `users` (
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `user_email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_role` enum('admin','aodos','gefyra','egnatia','kentrikiodos','moreas','neaodos','olympiaodos') COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `user_email` (`user_email`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Final view structure for view `ActiveDebtsWithDetails`
@@ -193,12 +226,4 @@ ALTER TABLE Passages ADD CONSTRAINT same_passage UNIQUE (tollID, tagRef, timesta
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-14 18:45:46
-
-DROP TABLE IF EXISTS `users`;
-CREATE TABLE `users` (
-    `user_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `user_email` VARCHAR(255) NOT NULL UNIQUE,
-    `user_password` VARCHAR(255) NOT NULL,
-    `user_role` ENUM("admin","users") default "users" 
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Dump completed on 2025-01-08 14:19:48
