@@ -18,6 +18,16 @@ const getTollStationPasses = async (req, res, next) => {
             return res.status(400).json({ error: 'Invalid date format. Expected YYYYMMDD.' });
         }
 
+        if (tollStationID.length!=4) {
+            return res.status(400).json({ error: 'Wrong required parameter tollStationID' });
+        }
+        const validPairs = ["AM", "EG", "GE", "KO", "MO", "NAO", "NO", "OO"];
+
+        const isValid = validPairs.some(pair => tollStationID.startsWith(pair));
+        if (!isValid) {
+            return res.status(400).json({ error: 'Wrong required parameter tollStationID' });
+        }
+
         const formattedDateFrom = `${date_from.slice(0, 4)}-${date_from.slice(4, 6)}-${date_from.slice(6, 8)}`;
         const formattedDateTo = `${date_to.slice(0, 4)}-${date_to.slice(4, 6)}-${date_to.slice(6, 8)}`;
 
