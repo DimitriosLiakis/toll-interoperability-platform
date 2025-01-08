@@ -103,7 +103,7 @@ exports.addPasses = async (req, res) => {
             return res.status(400).json({ status: "failed", info: "File not found: passages.csv" });
         }
 
-        const pythonScript = path.join(__dirname, "../scripts/csv_to_mysql.py");
+        const pythonScript = path.join(__dirname, "../scripts/passage2mysql.py");
         console.log("Python Script Path:", pythonScript);
 
         // Execute the Python script to process the file
