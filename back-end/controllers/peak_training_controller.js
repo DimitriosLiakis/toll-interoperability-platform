@@ -56,7 +56,7 @@ const peak_training_controller = async (req, res, next) => {
 async function training_the_models(company_id, dataCsvPath) {
     return new Promise((resolve, reject) => {
         try {
-            console.log(`[training_the_models] Starting training for ${company_id}`);
+            // console.log(`[training_the_models] Starting training for ${company_id}`);
 
             // Spawn the Python process for training
             const pythonProcess = spawn('python3', [
@@ -84,8 +84,8 @@ async function training_the_models(company_id, dataCsvPath) {
                     return reject(new Error(`Python script exited with code ${code}`));
                 }
 
-                console.log(`[training_the_models] Training completed for ${company_id}`);
-                console.log(`[training_the_models] Output: ${pythonOutput}`);
+                // console.log(`[training_the_models] Training completed for ${company_id}`);
+                // console.log(`[training_the_models] Output: ${pythonOutput}`);
                 resolve();
             });
         } catch (error) {
@@ -137,7 +137,7 @@ function saveDataToCSV(company_id, data) {
     const csvData = json2csv(flattenedData);
 
     fs.writeFileSync(filePath, csvData, 'utf8');
-    console.log(`[saveDataToCSV] Data for ${company_id} saved to ${filePath}`);
+    // console.log(`[saveDataToCSV] Data for ${company_id} saved to ${filePath}`);
     return filePath;
 }
 

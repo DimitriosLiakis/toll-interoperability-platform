@@ -51,7 +51,7 @@ model.fit(X_train, y_train)
 # Evaluate Model
 y_pred = model.predict(X_test)
 mae = mean_absolute_error(y_test, y_pred)
-print(f"Training completed for {args.company}. Mean Absolute Error: {mae}")
+# print(f"Training completed for {args.company}. Mean Absolute Error: {mae}")
 
 # Output Directory
 output_dir = os.path.join(os.path.dirname(__file__), '..', 'models_peak_hours')
