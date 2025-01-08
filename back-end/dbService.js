@@ -131,10 +131,10 @@ class DbService {
                 JOIN 
                     Toll tl ON p.tollID = tl.Toll_id
                 WHERE 
-                    t.company_id = ? 
+                    t.company_id = ? AND tl.OpID=?
                     AND DATE(p.timestamp) BETWEEN ? AND ?
             `;
-            const [rows] = await promisePool.query(query, [tagOpID, dateFrom, dateTo]);
+            const [rows] = await promisePool.query(query, [tagOpID, stationOpID, dateFrom, dateTo]);
             return rows;
         } catch (error) {
             console.error('Error in getpassAnalysis:', error.message);
