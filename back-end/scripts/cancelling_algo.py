@@ -4,7 +4,6 @@ from mysql.connector import Error
 import heapq
 import sys
 import os
-import time
 import networkx as nx
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
@@ -110,8 +109,8 @@ def fill_graph(graph):
         print(f"Error: {e}")
         sys.exit(1)
 
+
 from pyvis.network import Network
-import os
 
 def visualize_graph(graph, title, filename):
     """Visualize the graph using Pyvis for a stunning, interactive experience."""
@@ -165,10 +164,9 @@ def visualize_graph(graph, title, filename):
     # Save the graph to an HTML file
     output_dir = "../debt_figures"
     os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, f"{filename}.html")
+    output_path = os.path.abspath(os.path.join(output_dir, f"{filename}.html"))
     net.save_graph(output_path)
-    print(f"Graph saved to {output_path}")
-
+    print(output_path)  # Print only the absolute path
 
 
 if __name__ == "__main__":
@@ -183,12 +181,12 @@ if __name__ == "__main__":
     fill_graph(graph2)
     visualize_graph(graph1, "Initial Debt Graph", "initial_debts")
     visualize_graph(graph2, "Final Debt Graph", "final_debts")
+
     output_dir = "../debt_figures"
     os.makedirs(output_dir, exist_ok=True)
-    output_dir = "../debt_figures"
-    os.makedirs(output_dir, exist_ok=True)
+
     filename = "graph2"  # Name for the CSV file
-    output_path = os.path.join(output_dir, f"{filename}.csv")
+    output_path = os.path.abspath(os.path.join(output_dir, f"{filename}.csv"))
 
     # Flatten and write graph2 to the CSV
     with open(output_path, mode='w', newline='') as file:
@@ -203,6 +201,4 @@ if __name__ == "__main__":
                 if amount != 0.0:
                     writer.writerow([debtor, creditor, amount])
 
-    print(f"Graph2 successfully written to {output_path}")
-    
-    
+    print(output_path)  # Print only the absolute path
