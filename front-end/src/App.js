@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import WelcomePage from './pages/WelcomePage';
-import StatsPage from './pages/StatsPage';
 import MapPage from './pages/MapPage';
 import UploadPage from './pages/DisplayPassages';
 import DebtsPage from './pages/DebtsPage';
-import PassAnalysis from './pages/PassAnalysis';
+import StatsDashboard from './pages/StatsDashboard';
 import MachineLearning from './pages/MachineLearning';
 import LoginPage from './pages/LoginPage'; // Import LoginPage
 
@@ -38,7 +37,7 @@ function App() {
             path="/stats"
             element={
               <PrivateRoute>
-                <PassAnalysis />
+                <StatsDashboard />
               </PrivateRoute>
             }
           />
