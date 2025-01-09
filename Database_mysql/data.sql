@@ -21,7 +21,15 @@
 
 LOCK TABLES `Company` WRITE;
 /*!40000 ALTER TABLE `Company` DISABLE KEYS */;
-INSERT INTO `Company` VALUES ('AM','Aegean Motorway','aegean.motorway@example.com',30),('EG','Egnatia Odos','egnatia.odos@example.com',74),('GE','Gefyra S.A.','gefyra@example.com',2),('KO','Kentriki Odos','kentriki.odos@example.com',26),('MO','Moreas S.A.','moreas@example.com',18),('NAO','Naodos S.A.','naodos@example.com',41),('NO','Nea Odos','nea.odos@example.com',34),('OO','Olympia Odos','olympia.odos@example.com',28);
+INSERT INTO `Company` VALUES 
+('AM','Aegean Motorway','aegean.motorway@example.com',30),
+('EG','Egnatia Odos','egnatia.odos@example.com',74),
+('GE','Gefyra S.A.','gefyra@example.com',2),
+('KO','Kentriki Odos','kentriki.odos@example.com',26),
+('MO','Moreas S.A.','moreas@example.com',18),
+('NAO','Naodos S.A.','naodos@example.com',41),
+('NO','Nea Odos','nea.odos@example.com',34),
+('OO','Olympia Odos','olympia.odos@example.com',28);
 /*!40000 ALTER TABLE `Company` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -90,7 +98,15 @@ UNLOCK TABLES;
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (3,'admin@aodos.gr','$2a$10$fEjir2k.iOOP7c2HMyCaGOa1p0ZDWHlelOzGhEsLpC9/cmS0hcHfK','aodos'),(4,'admin@gefyra.gr','$2a$10$MFU98CfwLVwIBcYE.7XR6uWs3KKV4EkQ.XTi6fptZXrLe8iMaohdm','gefyra'),(5,'admin@egnatia.eu','$2a$10$Bey8WDOEfhBmyxjeDUVNGO0aD3UWOo1WJH55uAdnhLnz3C6jQ3qpe','egnatia'),(6,'admin@kentrikiodos.gr','$2a$10$g4Xi//0YwU8/k8kxOLjoFORpV7lCIyZtVio4/p7lv5UFKzZ3alVbi','kentrikiodos'),(7,'admin@moreas.com.gr','$2a$10$4EzsD2nFnUjsmw70Ph0er.nkOh7eIBChwl/CqEeF0UxXHx01PMlpK','moreas'),(8,'admin@neaodos.gr','$2a$10$XIS35/9CIWwlfahV6XLEoOw2IySe1kwCD2L8PZm/AgQsXNyOMkwPa','neaodos'),(9,'admin@olympiaodos.gr','$2a$10$4JCWLjkKV11cHzLtNXvkUebcLq0tN/PzXRquUtHtkeZGWYrziKET.','olympiaodos'),(10,'admin@yme.gov.gr','$2a$10$9ihz5H8hu4BK3mSUdQ1VaOZj6YiKFIkgw/MDjUIb6x.XFIuzGvgt2','admin');
+INSERT INTO `users` VALUES 
+(3,'admin@aodos.gr','$2a$10$fEjir2k.iOOP7c2HMyCaGOa1p0ZDWHlelOzGhEsLpC9/cmS0hcHfK','aodos','AM'),
+(4,'admin@gefyra.gr','$2a$10$MFU98CfwLVwIBcYE.7XR6uWs3KKV4EkQ.XTi6fptZXrLe8iMaohdm','gefyra','GE'),
+(5,'admin@egnatia.eu','$2a$10$Bey8WDOEfhBmyxjeDUVNGO0aD3UWOo1WJH55uAdnhLnz3C6jQ3qpe','egnatia','EG'),
+(6,'admin@kentrikiodos.gr','$2a$10$g4Xi//0YwU8/k8kxOLjoFORpV7lCIyZtVio4/p7lv5UFKzZ3alVbi','kentrikiodos','KO'),
+(7,'admin@moreas.com.gr','$2a$10$4EzsD2nFnUjsmw70Ph0er.nkOh7eIBChwl/CqEeF0UxXHx01PMlpK','moreas','MO'),
+(8,'admin@neaodos.gr','$2a$10$XIS35/9CIWwlfahV6XLEoOw2IySe1kwCD2L8PZm/AgQsXNyOMkwPa','neaodos','NAO'),
+(9,'admin@olympiaodos.gr','$2a$10$4JCWLjkKV11cHzLtNXvkUebcLq0tN/PzXRquUtHtkeZGWYrziKET.','olympiaodos','OO'),
+(10,'admin@yme.gov.gr','$2a$10$9ihz5H8hu4BK3mSUdQ1VaOZj6YiKFIkgw/MDjUIb6x.XFIuzGvgt2','admin',NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
