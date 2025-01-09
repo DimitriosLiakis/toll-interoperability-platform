@@ -193,7 +193,7 @@ CREATE TABLE `users` (
   `user_id` int NOT NULL AUTO_INCREMENT,
   `user_email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `user_password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_role` enum('admin','aodos','gefyra','egnatia','kentrikiodos','moreas','neaodos','olympiaodos') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_role` enum('admin','users') COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `user_email` (`user_email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
