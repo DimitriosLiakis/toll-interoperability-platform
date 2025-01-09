@@ -313,6 +313,8 @@ export default function MLDashboard() {
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
   const [forecastDate, setForecastDate] = useState('');
   const [selectedFunctionality, setSelectedFunctionality] = useState('');
+  
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const navigate = useNavigate(); // Hook for navigation
 
@@ -357,6 +359,12 @@ export default function MLDashboard() {
           // Token expired
           alert('Η συνεδρία σας έχει λήξει. Παρακαλώ συνδεθείτε ξανά.');
           handleLogout();
+          return;
+        }
+
+        // Set isAdmin if user_email is admin@yme.gov.gr
+        if (payload.user_email === 'admin@yme.gov.gr') {
+          setIsAdmin(true);
         }
       } catch (err) {
         console.error('Invalid token:', err);
@@ -561,22 +569,24 @@ export default function MLDashboard() {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">Προβλέψεις Κυκλοφορίας</h1>
 
-      {/* === Training Section === */}
-      <div className="mb-8 p-6 border rounded bg-white">
-        <h2 className="text-xl font-bold mb-4">Εκπαίδευση Μοντέλων</h2>
-        <button
-          onClick={trainModels}
-          disabled={loading}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
-        >
-          {loading ? 'Εκπαίδευση...' : 'Εκπαίδευση'}
-        </button>
-        {trainingStatus && (
-          <div className="mt-4 p-4 bg-green-100 border border-green-400 rounded">
-            <p>{trainingStatus}</p>
-          </div>
-        )}
-      </div>
+      {/* === Training Section (Conditionally Rendered) === */}
+      {isAdmin && (
+        <div className="mb-8 p-6 border rounded bg-white">
+          <h2 className="text-xl font-bold mb-4">Εκπαίδευση Μοντέλων</h2>
+          <button
+            onClick={trainModels}
+            disabled={loading}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+          >
+            {loading ? 'Εκπαίδευση...' : 'Εκπαίδευση'}
+          </button>
+          {trainingStatus && (
+            <div className="mt-4 p-4 bg-green-100 border border-green-400 rounded">
+              <p>{trainingStatus}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* === Prediction / Forecast Selection === */}
       <div className="p-6 border rounded bg-white">
