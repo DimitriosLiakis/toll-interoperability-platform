@@ -4,7 +4,7 @@ const forecast_controller = require('../controllers/forecast_controller');
 const { authenticateToken, authorizeRole } = require('../middlewares/authMiddleware');
 
 
-router.get('/:company_id?/:date?', authenticateToken, authorizeRole(["user","admin"]), forecast_controller);
+router.get('/:company_id?/:date?', authenticateToken, authorizeRole(["users","admin"]), forecast_controller);
 
 router.get('*', (req, res) => {
     console.log("400 - Route not found");
