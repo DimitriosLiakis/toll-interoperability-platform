@@ -1,5 +1,8 @@
+// src/DebtsPage.js
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
+// DebtSection and CsvSection components remain unchanged
 const DebtSection = ({ title, html, sectionKey }) => {
   const handleDownload = () => {
     const blob = new Blob([html], { type: 'text/html' });
@@ -112,10 +115,54 @@ const DebtsPage = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false); // New state for admin check
+
+  const navigate = useNavigate(); // Hook for navigation
 
   useEffect(() => {
-    fetchDebtData();
+    checkTokenAndFetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const checkTokenAndFetchData = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // No token found, redirect to login
+      navigate('/login');
+      return;
+    }
+
+    try {
+      // Decode the token to get payload
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+
+      if (payload.exp && payload.exp < currentTime) {
+        // Token expired
+        alert('Η συνεδρία σας έχει λήξει. Παρακαλώ συνδεθείτε ξανά.');
+        handleLogout();
+        return;
+      }
+
+      // Set isAdmin if user_email is admin@yme.gov.gr
+      if (payload.user_email === 'admin@yme.gov.gr') {
+        setIsAdmin(true);
+      }
+
+      // Fetch debt data for all users
+      fetchDebtData();
+    } catch (err) {
+      console.error('Invalid token:', err);
+      alert('Μη έγκυρο token. Παρακαλώ συνδεθείτε ξανά.');
+      handleLogout();
+    }
+  };
+
+  // Function to handle logout (remove token and redirect to login)
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
 
   const fetchDebtData = async () => {
     setLoading(true);
@@ -149,18 +196,29 @@ const DebtsPage = () => {
   };
 
   const handleSpecificError = (statusCode) => {
+    let message = '';
     switch (statusCode) {
       case 400:
-        throw new Error('Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.');
+        message = 'Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.';
+        break;
       case 401:
-        throw new Error('Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά.');
+        message = 'Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά.';
+        handleLogout();
+        break;
+      case 403:
+        message = 'Απαγορεύεται η πρόσβαση. Δεν έχετε τα απαραίτητα δικαιώματα.';
+        break;
       case 404:
-        throw new Error('Ο ζητούμενος πόρος δεν βρέθηκε.');
+        message = 'Ο ζητούμενος πόρος δεν βρέθηκε.';
+        break;
       case 500:
-        throw new Error('Προέκυψε σφάλμα στον διακομιστή. Παρακαλώ δοκιμάστε ξανά αργότερα.');
+        message = 'Προέκυψε σφάλμα στον διακομιστή. Παρακαλώ δοκιμάστε ξανά αργότερα.';
+        break;
       default:
-        throw new Error('Προέκυψε μη αναμενόμενο σφάλμα.');
+        message = `Προέκυψε μη αναμενόμενο σφάλμα. Κωδικός κατάστασης: ${statusCode}`;
+        break;
     }
+    throw new Error(message);
   };
 
   const handleCancelDebts = async () => {
@@ -178,7 +236,6 @@ const DebtsPage = () => {
           'x-observatory-auth': token,
         },
       });
-      
 
       if (response.status === 200) {
         const result = await response.json();
@@ -245,6 +302,7 @@ const DebtsPage = () => {
         Debt Figures
       </h1>
 
+      {/* === HTML and CSV Sections (Visible to All Users) === */}
       <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
         <DebtSection title="Αρχικές Οφειλές" html={data.html.html1} sectionKey="initial" />
         <DebtSection title="Τελικές Οφειλές" html={data.html.html2} sectionKey="final" />
@@ -252,15 +310,20 @@ const DebtsPage = () => {
 
       <CsvSection title="Graph Data (graph2.csv)" csvData={data.csv} />
 
-      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <button
-          onClick={handleCancelDebts}
-          className="px-6 py-3 bg-blue-500 text-white rounded shadow"
-          disabled={isProcessing}
-        >
-          {isProcessing ? 'Processing...' : 'Cancel Debts'}
-        </button>
-      </div>
+      {/* === Cancel Debts Section (Visible Only to Admin) === */}
+      {isAdmin && (
+        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+          <button
+            onClick={handleCancelDebts}
+            className="px-6 py-3 bg-blue-500 text-white rounded shadow"
+            disabled={isProcessing}
+          >
+            {isProcessing ? 'Processing...' : 'Cancel Debts'}
+          </button>
+        </div>
+      )}
+
+      
     </div>
   );
 };
