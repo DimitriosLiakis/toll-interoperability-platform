@@ -194,8 +194,10 @@ CREATE TABLE `users` (
   `user_email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `user_password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `user_role` enum('admin','users') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `company_employee` varchar(30) ,
   PRIMARY KEY (`user_id`),
-  UNIQUE KEY `user_email` (`user_email`)
+  UNIQUE KEY `user_email` (`user_email`),
+  CONSTRAINT `users_ibfk_1` FOREIGN KEY (`company_employee`) REFERENCES `Company` (`company_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
