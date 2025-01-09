@@ -1,2 +1,7 @@
 .env
 node_modules/
+backend/ml/results
+backend/ml/input
+backend/ml/results_peak_hour
+backend/ml/input
+backend/ml/input_peak_hours
