@@ -169,7 +169,11 @@ th:nth-child(2), td:nth-child(2) {
   color: #1d4ed8; /* Green for Predicted Vehicles */
   font-weight: bold;
 }
-
+/* All other columns: Blue */
+th:nth-child(n+3), td:nth-child(n+3) {
+  color: #1d4ed8; /* Blue */
+  font-weight: bold;
+}
 /* Utility classes */
 .text-red-700 {
   color: #b91c1c;
