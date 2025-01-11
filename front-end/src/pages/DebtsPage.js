@@ -2,14 +2,29 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// DebtSection and CsvSection components remain unchanged
+// Mapping of codes to Greek labels
+const namesMapping = {
+  AM: 'Αυτοκινητόδρομος Αιγαίου',
+  EG: 'Εγνατία Οδός',
+  KO: 'Κεντρική Οδός',
+  MO: 'Μορέας',
+  NAO: 'Αττική Οδός',
+  NO: 'Νέα Οδός',
+  OO: 'Ολυμπία Οδός',
+  GE: 'Γέφυρα',
+};
+
+// DebtSection Component
 const DebtSection = ({ title, html, sectionKey }) => {
   const handleDownload = () => {
     const blob = new Blob([html], { type: 'text/html' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `${sectionKey}_debts.html`;
+    document.body.appendChild(link); // Required for Firefox
     link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href); // Clean up the URL object
   };
 
   return (
@@ -18,7 +33,7 @@ const DebtSection = ({ title, html, sectionKey }) => {
       <div className="mb-4 flex justify-end">
         <button
           onClick={handleDownload}
-          className="px-4 py-2 bg-green-500 text-white rounded shadow"
+          className="px-4 py-2 bg-green-500 text-white rounded shadow hover:bg-green-600 transition-colors"
         >
           Download HTML
         </button>
@@ -42,9 +57,10 @@ const DebtSection = ({ title, html, sectionKey }) => {
   );
 };
 
+// CsvSection Component with Download CSV Button and Greek Translations
 const CsvSection = ({ title, csvData }) => {
   if (!csvData) {
-    return <p>No CSV data available.</p>;
+    return <p>Δεν υπάρχουν διαθέσιμα δεδομένα CSV.</p>;
   }
 
   const rows = csvData
@@ -53,7 +69,7 @@ const CsvSection = ({ title, csvData }) => {
     .map((row) => row.split(','));
 
   if (rows.length === 0) {
-    return <p>No CSV data available.</p>;
+    return <p>Δεν υπάρχουν διαθέσιμα δεδομένα CSV.</p>;
   }
 
   const filteredRows = rows.filter((row, rowIndex) => {
@@ -62,47 +78,117 @@ const CsvSection = ({ title, csvData }) => {
   });
 
   if (filteredRows.length <= 1) {
-    return <p>No data to display.</p>;
+    return <p>Δεν υπάρχουν δεδομένα για εμφάνιση.</p>;
   }
+
+  // Function to handle CSV download with Greek headers
+  const handleDownload = () => {
+    // Replace English headers with Greek headers
+    const greekHeaders = ['Οφειλέτης', 'Δανειστής', 'Ποσό'];
+    const dataRows = filteredRows.slice(1).map((row) => {
+      const [debtor, creditor, amount] = row;
+      const translatedDebtor = namesMapping[debtor.trim()] || debtor;
+      const translatedCreditor = namesMapping[creditor.trim()] || creditor;
+      return [translatedDebtor, translatedCreditor, amount];
+    });
+
+    const csvContent = [greekHeaders.join(','), ...dataRows.map(row => row.join(','))].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    // Generate a safe filename by removing special characters and spaces
+    const safeTitle = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    link.download = `${safeTitle}.csv`;
+    document.body.appendChild(link); // Required for Firefox
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url); // Clean up the URL object
+  };
 
   return (
     <div className="p-6 border rounded-lg shadow-sm" style={{ marginTop: '2rem' }}>
       <h2 className="text-2xl font-bold mb-4">{title}</h2>
+      {/* Download CSV Button */}
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={handleDownload}
+          className="px-4 py-2 bg-green-500 text-white rounded shadow hover:bg-green-600 transition-colors"
+        >
+          Κατέβασμα CSV
+        </button>
+      </div>
+      {/* CSV Data Table */}
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              {filteredRows[0].map((header, index) => (
-                <th
-                  key={index}
-                  style={{
-                    border: '1px solid #ddd',
-                    padding: '8px',
-                    backgroundColor: '#f2f2f2',
-                  }}
-                >
-                  {header}
-                </th>
-              ))}
+              {/* Replace English headers with Greek headers */}
+              <th
+                style={{
+                  border: '1px solid #ddd',
+                  padding: '8px',
+                  backgroundColor: '#f2f2f2',
+                  
+                }}
+              >
+                Οφειλέτης
+              </th>
+              <th
+                style={{
+                  border: '1px solid #ddd',
+                  padding: '8px',
+                  backgroundColor: '#f2f2f2',
+                }}
+              >
+                Δανειστής
+              </th>
+              <th
+                style={{
+                  border: '1px solid #ddd',
+                  padding: '8px',
+                  backgroundColor: '#f2f2f2',
+                }}
+              >
+                Ποσό
+              </th>
             </tr>
           </thead>
           <tbody>
-            {filteredRows.slice(1).map((row, rowIndex) => (
-              <tr key={rowIndex}>
-                {row.map((cell, cellIndex) => (
+            {filteredRows.slice(1).map((row, rowIndex) => {
+              const [debtor, creditor, amount] = row;
+              const translatedDebtor = namesMapping[debtor.trim()] || debtor;
+              const translatedCreditor = namesMapping[creditor.trim()] || creditor;
+              return (
+                <tr key={rowIndex}>
                   <td
-                    key={cellIndex}
                     style={{
                       border: '1px solid #ddd',
                       padding: '8px',
-                      textAlign: 'center',
                     }}
                   >
-                    {cell.trim() === '0' ? '' : cell}
+                    {translatedDebtor}
                   </td>
-                ))}
-              </tr>
-            ))}
+                  <td
+                    style={{
+                      border: '1px solid #ddd',
+                      padding: '8px',
+                    }}
+                  >
+                    {translatedCreditor}
+                  </td>
+                  <td
+                    style={{
+                      border: '1px solid #ddd',
+                      padding: '8px',
+                    }}
+                  >
+                    {amount.trim() === '0' ? '' : amount}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -110,6 +196,7 @@ const CsvSection = ({ title, csvData }) => {
   );
 };
 
+// DebtsPage Component
 const DebtsPage = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -205,6 +292,9 @@ const DebtsPage = () => {
         message = 'Μη εξουσιοδοτημένο αίτημα. Παρακαλώ συνδεθείτε ξανά.';
         handleLogout();
         break;
+      case 403:
+        message = 'Απαγορεύεται η πρόσβαση. Δεν έχετε τα απαραίτητα δικαιώματα.';
+        break;
       case 404:
         message = 'Ο ζητούμενος πόρος δεν βρέθηκε.';
         break;
@@ -261,7 +351,7 @@ const DebtsPage = () => {
           minHeight: '100vh',
         }}
       >
-        <p>Loading...</p>
+        <p>Φόρτωση...</p>
       </div>
     );
   }
@@ -277,7 +367,7 @@ const DebtsPage = () => {
           color: 'red',
         }}
       >
-        <p>Error: {error}</p>
+        <p>Σφάλμα: {error}</p>
       </div>
     );
   }
@@ -296,7 +386,7 @@ const DebtsPage = () => {
           marginBottom: '2rem',
         }}
       >
-        Debt Figures
+        Οφειλές
       </h1>
 
       {/* === HTML and CSV Sections (Visible to All Users) === */}
@@ -305,22 +395,20 @@ const DebtsPage = () => {
         <DebtSection title="Τελικές Οφειλές" html={data.html.html2} sectionKey="final" />
       </div>
 
-      <CsvSection title="Graph Data (graph2.csv)" csvData={data.csv} />
+      <CsvSection title="Δεδομένα οφειλών" csvData={data.csv} />
 
       {/* === Cancel Debts Section (Visible Only to Admin) === */}
       {isAdmin && (
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
           <button
             onClick={handleCancelDebts}
-            className="px-6 py-3 bg-blue-500 text-white rounded shadow"
+            className="px-6 py-3 bg-blue-500 text-white rounded shadow hover:bg-blue-600 transition-colors"
             disabled={isProcessing}
           >
-            {isProcessing ? 'Processing...' : 'Cancel Debts'}
+            {isProcessing ? 'Επεξεργασία...' : 'Ακύρωση Οφειλών'}
           </button>
         </div>
       )}
-
-      
     </div>
   );
 };
