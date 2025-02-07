@@ -3,7 +3,7 @@ const router = express.Router();
 const controller = require('../controllers/tollStationsPasses_controller');
 const { authenticateToken, authorizeRole } = require('../middlewares/authMiddleware');
 
-router.get('/:tollStationID?/:date_from?/:date_to?',authenticateToken, authorizeRole(["user","admin"]), (req, res, next) => {
+router.get('/:tollStationID?/:date_from?/:date_to?',authenticateToken, authorizeRole(["users","admin"]), (req, res, next) => {
     const { tollStationID, date_from, date_to } = req.params;
 
     if (!tollStationID || !date_from || !date_to) {

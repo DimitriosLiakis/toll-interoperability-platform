@@ -5,7 +5,7 @@ const { authenticateToken, authorizeRole } = require('../middlewares/authMiddlew
 
 
 // Adding more flexible route to catch missing parameters
-router.get('/:tollOpID?/:tagOpID?/:date_from?/:date_to?',authenticateToken, authorizeRole(["user","admin"]), controller.passesCost_controller);
+router.get('/:tollOpID?/:tagOpID?/:date_from?/:date_to?',authenticateToken, authorizeRole(["users","admin"]), controller.passesCost_controller);
 
 // Catch-all route for when parameters are missing or malformed
 router.get('*', (req, res) => {
