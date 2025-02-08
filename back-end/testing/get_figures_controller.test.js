@@ -5,6 +5,11 @@
 const request = require('supertest');
 const express = require('express');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
+const path = require('path');
+
+// Load .env from one folder up so that JWT_SECRET is available
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // Mock DbService so no real DB calls occur.
 jest.mock('../dbService.js', () => ({
@@ -25,9 +30,18 @@ const { get_figures } = require('../controllers/get_figures_controller');
 
 describe('GET /figures (with format)', () => {
   let app;
+  let token;
 
   beforeAll(() => {
-    // Create an Express app that uses our controller
+    // Generate a valid JWT token using your secret and a payload.
+    const payload = {
+      username: 'admin@yme.gov.gr',
+      user_role: 'admin'
+    };
+    const secret = process.env.JWT_SECRET || 'mySuperSecretKey';
+    token = jwt.sign(payload, secret, { expiresIn: '1h' });
+
+    // Create an Express app that uses our controller.
     app = express();
     app.get('/figures', get_figures);
   });
@@ -38,8 +52,9 @@ describe('GET /figures (with format)', () => {
 
   test('should return 400 if the format query is invalid', async () => {
     // We pass a format that isn't 'csv' or 'json'
-    const response = await request(app).get('/figures?format=xml');
-
+    const response = await request(app)
+      .get('/figures?format=xml')
+      .set('x-observatory-auth', token);
     expect(response.status).toBe(400);
     expect(response.body).toHaveProperty('error');
     expect(response.body.error).toBe('Invalid format. Must be either "csv" or "json".');
@@ -47,12 +62,14 @@ describe('GET /figures (with format)', () => {
 
   test('should return 204 if any required file is missing', async () => {
     // The controller checks four files. If *any* is missing, it returns 204.
-    // Suppose the first file check returns true, but second returns false.
+    // Suppose the first file check returns true, but the second returns false.
     fs.existsSync
       .mockReturnValueOnce(true)   // figure1
       .mockReturnValueOnce(false); // figure2 => triggers 204
 
-    const response = await request(app).get('/figures?format=json');
+    const response = await request(app)
+      .get('/figures?format=json')
+      .set('x-observatory-auth', token);
 
     expect(response.status).toBe(204);
     // No response body is expected for 204
@@ -68,7 +85,9 @@ describe('GET /figures (with format)', () => {
       throw new Error('File read error');
     });
 
-    const response = await request(app).get('/figures?format=json');
+    const response = await request(app)
+      .get('/figures?format=json')
+      .set('x-observatory-auth', token);
 
     expect(response.status).toBe(500);
     expect(response.body).toHaveProperty('error');
@@ -89,7 +108,9 @@ describe('GET /figures (with format)', () => {
       return '';
     });
 
-    const response = await request(app).get('/figures?format=json');
+    const response = await request(app)
+      .get('/figures?format=json')
+      .set('x-observatory-auth', token);
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('message');
@@ -116,14 +137,16 @@ describe('GET /figures (with format)', () => {
       return '';
     });
 
-    const response = await request(app).get('/figures?format=csv');
+    const response = await request(app)
+      .get('/figures?format=csv')
+      .set('x-observatory-auth', token);
 
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toContain('text/csv');
 
-    // The CSV is expected to have a header and one row
-    //  message,figure1,figure2,html1,html2
-    //  "Figures of initial debts...","data:image/png;base64,fakeBase64data", ...
+    // The CSV is expected to have a header and one row:
+    // message,figure1,figure2,html1,html2
+    // "Figures of initial debts and debts after the optimization", "data:image/png;base64,fakeBase64data", ...
     const csvBody = response.text;
     expect(csvBody).toContain('message,figure1,figure2,html1,html2');
     expect(csvBody).toContain('"Figures of initial debts and debts after the optimization"');

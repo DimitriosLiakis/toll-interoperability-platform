@@ -1,8 +1,24 @@
 const request = require('supertest');
 const app = require('../app'); // Import your Express app
 const DbService = require('../dbService.js');
+const jwt = require('jsonwebtoken');
+const path = require('path');
+
+// Load environment variables from one folder up
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 jest.mock('../dbService.js'); // Mock the database service
+
+let token;
+beforeAll(() => {
+  // Generate a valid JWT token using the same secret and payload structure as your app
+  const payload = {
+    username: 'admin@yme.gov.gr',
+    user_role: 'admin'
+  };
+  const secret = process.env.JWT_SECRET || 'mySuperSecretKey';
+  token = jwt.sign(payload, secret, { expiresIn: '1h' });
+});
 
 describe('GET /api/passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to', () => {
     const mockPassList = [
@@ -33,13 +49,17 @@ describe('GET /api/passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to', () =
     });
 
     it('should return 400 if required parameters are missing', async () => {
-        const response = await request(app).get('/api/passAnalysis/');
+        const response = await request(app)
+            .get('/api/passAnalysis/')
+            .set('x-observatory-auth', token);
         expect(response.status).toBe(400);
         expect(response.body.error).toBe('Missing required parameters.');
     });
 
     it('should return 400 if date format is invalid', async () => {
-        const response = await request(app).get('/api/passAnalysis/AM/EG/202301AB/20230116');
+        const response = await request(app)
+            .get('/api/passAnalysis/AM/EG/202301AB/20230116')
+            .set('x-observatory-auth', token);
         expect(response.status).toBe(400);
         expect(response.body.error).toBe('Invalid date format. Use YYYYMMDD.');
     });
@@ -49,14 +69,17 @@ describe('GET /api/passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to', () =
             getpassAnalysis: jest.fn().mockResolvedValue([]), // Simulate no data
         });
     
-        const response = await request(app).get('/api/passAnalysis/AM/EG/20230101/20230131');
+        const response = await request(app)
+            .get('/api/passAnalysis/AM/EG/20230101/20230131')
+            .set('x-observatory-auth', token);
         expect(response.status).toBe(204);
         expect(response.body).toEqual({}); // Response body should be empty
     });
     
-
     it('should return 200 with valid JSON data when data is available', async () => {
-        const response = await request(app).get('/api/passAnalysis/AM/EG/20230101/20230131');
+        const response = await request(app)
+            .get('/api/passAnalysis/AM/EG/20230101/20230131')
+            .set('x-observatory-auth', token);
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty('stationOpID', 'AM');
         expect(response.body).toHaveProperty('tagOpID', 'EG');
@@ -78,7 +101,9 @@ describe('GET /api/passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to', () =
     });
 
     it('should return CSV data if format=csv is specified', async () => {
-        const response = await request(app).get('/api/passAnalysis/AM/EG/20230101/20230131?format=csv');
+        const response = await request(app)
+            .get('/api/passAnalysis/AM/EG/20230101/20230131?format=csv')
+            .set('x-observatory-auth', token);
         expect(response.status).toBe(200);
         expect(response.headers['content-type']).toBe('text/csv; charset=utf-8');
         expect(response.headers['content-disposition']).toContain('attachment;');
@@ -91,7 +116,9 @@ describe('GET /api/passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to', () =
             getpassAnalysis: jest.fn().mockRejectedValue(new Error('Database error')),
         });
 
-        const response = await request(app).get('/api/passAnalysis/AM/EG/20230101/20230131');
+        const response = await request(app)
+            .get('/api/passAnalysis/AM/EG/20230101/20230131')
+            .set('x-observatory-auth', token);
         expect(response.status).toBe(500);
         expect(response.body.error).toBe('Internal server error.');
     });

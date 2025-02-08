@@ -58,5 +58,5 @@ data['company'] = le.inverse_transform(data['company'])
 data.to_csv(args.output_csv, index=False)
 
 # Print the result in JSON format
-print(json.dumps(data.to_dict(orient='records')))
+# print(json.dumps(data.to_dict(orient='records')))
 

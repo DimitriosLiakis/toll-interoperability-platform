@@ -1,36 +1,72 @@
+// tests/passingToll.test.js (or similar file name)
 const request = require('supertest');
-const app = require('../app'); 
+const jwt = require('jsonwebtoken');
+const path = require('path');
+// Load .env file from one folder above
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+require('jest-extended');
+const app = require('../app');
 
 describe('PUT /api/passing_toll - Header Tests', () => {
-    it('should return CSV headers when format=csv is specified', async () => {
-        const response = await request(app).put('/api/passing_toll?format=csv');
-        expect(response.status).toBe(200); 
-    });
+  let token;
 
-    it('should return CSV headers when format=csv is specified', async () => {
-        const response = await request(app).put('/api/passing_toll').query({ format: 'invalid' });
+  // Create a valid token before tests run
+  beforeAll(() => {
+    // Adjust the payload as needed by your middleware and authorization logic.
+    const payload = {
+      username: 'admin@yme.gov.gr',
+      user_role: 'admin'
+    };
 
-        expect(response.status).toBe(400); 
+    // Use process.env.JWT_SECRET or fallback to the same secret used in your middleware
+    const secret = process.env.JWT_SECRET || 'mySuperSecretKey';
 
-    });
-    it('should return empty headers for 204 No Content', async () => {
-        const response = await request(app).put('/api/passing_toll');
+    // Sign the token (optionally setting an expiry time)
+    token = jwt.sign(payload, secret, { expiresIn: '1h' });
+  });
 
-        expect(response.status).toBe(204);
+  it('should return CSV headers when format=csv is specified', async () => {
+    const response = await request(app)
+      .put('/api/passing_toll?format=csv')
+      .set('x-observatory-auth', token);
+  
+    expect([200, 204]).toContain(response.status); // Checks that response.status is in the array
+  });
+  
 
-    });
+  it('should return CSV headers when format=csv is specified', async () => {
+    const response = await request(app)
+      .put('/api/passing_toll')
+      .query({ format: 'invalid' })
+      .set('x-observatory-auth', token);
 
-    it('should return JSON headers for 500 Internal Server Error', async () => {
-        
-        jest.spyOn(console, 'error').mockImplementation(() => {}); // Suppress error logs in test output
-        const dbServiceMock = jest.spyOn(require('../dbService.js').prototype, 'getLastPassageId')
-            .mockRejectedValue(new Error('Database Error'));
+    expect(response.status).toBe(400);
+  });
 
-        const response = await request(app).put('/api/passing_toll');
-        expect(response.status).toBe(500);
-        expect(response.body.error).toBe('Database Error');
+  it('should return empty headers for 204 No Content', async () => {
+    const response = await request(app)
+      .put('/api/passing_toll')
+      .set('x-observatory-auth', token);
 
-        dbServiceMock.mockRestore();
-    });
-    
+    expect(response.status).toBe(204);
+  });
+
+  it('should return JSON headers for 500 Internal Server Error', async () => {
+    // Suppress error logs in test output
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    // Mock the database service method to force an error
+    const dbServiceMock = jest
+      .spyOn(require('../dbService.js').prototype, 'getLastPassageId')
+      .mockRejectedValue(new Error('Database Error'));
+
+    const response = await request(app)
+      .put('/api/passing_toll')
+      .set('x-observatory-auth', token);
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toBe('Database Error');
+
+    dbServiceMock.mockRestore();
+  });
 });

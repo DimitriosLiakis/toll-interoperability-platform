@@ -7,6 +7,10 @@
 
 const request = require('supertest');
 const express = require('express');
+const jwt = require('jsonwebtoken');
+const path = require('path');
+// Load .env from one folder up so that JWT_SECRET is available
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // 1) Mock DbService, so no real DB is called
 jest.mock('../dbService.js', () => {
@@ -65,6 +69,20 @@ app.use(express.json());
 app.use('/api/forecast', forecastRouter);
 
 // ------------------
+// Generate JWT Token for Testing
+// ------------------
+let token;
+beforeAll(() => {
+  // Adjust the payload as required by your middleware/authorization logic.
+  const payload = {
+    username: 'admin@yme.gov.gr',
+    user_role: 'admin'
+  };
+  const secret = process.env.JWT_SECRET || 'mySuperSecretKey';
+  token = jwt.sign(payload, secret, { expiresIn: '1h' });
+});
+
+// ------------------
 // Tests
 // ------------------
 describe('GET /api/forecast/:company_id?/:date?', () => {
@@ -75,7 +93,9 @@ describe('GET /api/forecast/:company_id?/:date?', () => {
   // SCENARIO 1: Missing parameters => 400
   it('should return 400 if company_id or date are missing', async () => {
     // e.g. call /api/forecast with no params
-    const response = await request(app).get('/api/forecast/');
+    const response = await request(app)
+      .get('/api/forecast/')
+      .set('x-observatory-auth', token);
     expect(response.status).toBe(400);
     expect(response.body).toHaveProperty('error', 'Missing required parameters');
   });
@@ -83,7 +103,9 @@ describe('GET /api/forecast/:company_id?/:date?', () => {
   // SCENARIO 2: Invalid date format => 400
   it('should return 400 for invalid date format', async () => {
     // "2021-01-01" doesn't match YYYYMMDD
-    const response = await request(app).get('/api/forecast/AM/2021-01-01');
+    const response = await request(app)
+      .get('/api/forecast/AM/2021-01-01')
+      .set('x-observatory-auth', token);
     expect(response.status).toBe(400);
     expect(response.body).toHaveProperty('error', 'Invalid date format. Use YYYYMMDD.');
   });
@@ -92,7 +114,9 @@ describe('GET /api/forecast/:company_id?/:date?', () => {
   // If tollstations() returns [] or null, the controller sends 204
   it('should return 204 if no toll stations found for the company', async () => {
     mockDbInstance.tollstations.mockResolvedValueOnce([]); // or null
-    const response = await request(app).get('/api/forecast/ZZ/20210101');
+    const response = await request(app)
+      .get('/api/forecast/ZZ/20210101')
+      .set('x-observatory-auth', token);
     expect(response.status).toBe(204);
     // 204 means No Content, so typically no body is returned
     expect(response.body).toEqual({});
@@ -108,7 +132,9 @@ describe('GET /api/forecast/:company_id?/:date?', () => {
     // Second call: data_for_nop => null => 204
     mockDbInstance.data_for_nop.mockResolvedValueOnce(null);
 
-    const response = await request(app).get('/api/forecast/AM/20210101');
+    const response = await request(app)
+      .get('/api/forecast/AM/20210101')
+      .set('x-observatory-auth', token);
     expect(response.status).toBe(204);
     expect(response.body).toEqual({});
   });
@@ -135,7 +161,9 @@ describe('GET /api/forecast/:company_id?/:date?', () => {
       return mockProcess;
     });
 
-    const response = await request(app).get('/api/forecast/AM/20210101');
+    const response = await request(app)
+      .get('/api/forecast/AM/20210101')
+      .set('x-observatory-auth', token);
     expect(response.status).toBe(500);
     expect(response.body).toHaveProperty('error', 'Error making predictions');
   });
@@ -172,7 +200,9 @@ describe('GET /api/forecast/:company_id?/:date?', () => {
       return mockProcess;
     });
 
-    const response = await request(app).get('/api/forecast/AM/20210101');
+    const response = await request(app)
+      .get('/api/forecast/AM/20210101')
+      .set('x-observatory-auth', token);
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body)).toBe(true);
     if (response.body.length > 0) {
@@ -210,7 +240,9 @@ describe('GET /api/forecast/:company_id?/:date?', () => {
       return mockProcess;
     });
   
-    const response = await request(app).get('/api/forecast/AM/20210101?format=csv');
+    const response = await request(app)
+      .get('/api/forecast/AM/20210101?format=csv')
+      .set('x-observatory-auth', token);
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toContain('text/csv');
   
@@ -220,5 +252,4 @@ describe('GET /api/forecast/:company_id?/:date?', () => {
     // Match the row data
     expect(response.text).toMatch(/"2021-01-01",123/);
   });
-  
 });
