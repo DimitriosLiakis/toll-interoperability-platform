@@ -46,7 +46,7 @@ model.fit(X_train, y_train)
 # Evaluate the model
 y_pred = model.predict(X_test)
 mse = mean_squared_error(y_test, y_pred)
-# print(f'Model trained with MSE: {mse}')
+print(f'Model trained with MSE: {mse}')
 
 # Ensure the output directory exists
 output_dir = os.path.join(os.path.dirname(__file__), '..', 'models_passages')
@@ -57,4 +57,4 @@ output_path = os.path.join(output_dir, f"model_{args.company}.pkl")
 with open(output_path, 'wb') as model_file:
     pickle.dump(model, model_file)
 
-# print(f'Model saved to {output_path}')
+print(f'Model saved to {output_path}')
