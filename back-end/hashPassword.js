@@ -6,7 +6,7 @@
  * 
  * The hashed password replaces the plain text password in the user data.
  * After the hashing process, the updated user object (with the hashed password) is
- * ready to be stored in the database. 
+ * ready to be stored in the database.
  * 
  * The hashed password cannot be decrypted, which increases the security of user data.
  * 
@@ -17,8 +17,10 @@
  * 4. The user can log in by entering their password, which is then hashed again 
  *    and compared to the stored hashed value in the database.
  */
-//also it is a way to show you the passwords that we use
+
 const bcrypt = require('bcryptjs');
+const db = require('./dbService.js');
+const dbService = db.getDbServiceInstance();
 
 // Sample data from your table
 const users = [
@@ -32,26 +34,38 @@ const users = [
   { user_id: 10, user_email: 'admin@yme.gov.gr', user_password: 'yme123!', user_session_id: null }
 ];
 
-const saltRounds = 10; // Adjust salt rounds for security
+const saltRounds = 10;
 
-// Function to hash the password for each user and return the updated data
-function hashPasswords(users) {
-  users.forEach((user, index) => {
-    bcrypt.hash(user.user_password, saltRounds, (err, hashedPassword) => {
+// Δημιουργούμε μια promisified έκδοση της bcrypt.hash για να χρησιμοποιήσουμε async/await
+function hashPassword(password) {
+  return new Promise((resolve, reject) => {
+    bcrypt.hash(password, saltRounds, (err, hashed) => {
       if (err) {
-        console.error('Error hashing password for user', user.user_email, err);
-        return;
+        reject(err);
+      } else {
+        resolve(hashed);
       }
-      
-      // Here we update the user object with the hashed password
-      users[index].user_password = hashedPassword;
-      console.log(`User ${user.user_email} hashed password: ${hashedPassword}`);
-      
-      // Store the user in the database with hashed password
-      // Database code should be here (e.g., an SQL query or a NoSQL insert)
     });
   });
 }
 
-// Call the function to hash passwords
-hashPasswords(users);
+// Συνάρτηση που επεξεργάζεται κάθε χρήστη: κάνει hash του κωδικού και μετά καλεί το dbService για update ή insert.
+async function processUsers(users) {
+  for (const user of users) {
+    try {
+      // Hash του plain text κωδικού
+      const hashedPassword = await hashPassword(user.user_password);
+      console.log(`User ${user.user_email} hashed password: ${hashedPassword}`);
+      
+      // Κλήση της createOrUpdateUser για αποθήκευση του χρήστη στη βάση,
+      // όπου περνάμε μόνο το email και τον hashed κωδικό (χωρίς να αγγίζουμε το user_role)
+      const result = await dbService.createOrUpdateUser(user.user_email, hashedPassword);
+      console.log(`Database result for ${user.user_email}:`, result);
+    } catch (error) {
+      console.error(`Error processing user ${user.user_email}:`, error);
+    }
+  }
+}
+
+// Ξεκινάμε την επεξεργασία των χρηστών
+processUsers(users);
