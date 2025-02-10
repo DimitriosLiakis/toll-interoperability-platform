@@ -1,85 +1,130 @@
-/* Leaflet CSS */
+/* Leaflet Base Styles */
 @import "leaflet/dist/leaflet.css";
-
-/* MarkerCluster CSS */
 @import "leaflet.markercluster/dist/MarkerCluster.css";
 @import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
-/* Map Container */
-#map {
-  height: 500px;
-  width: 100%;
+/* Filters */
+.filters-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 20px 15px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* Reset all popup defaults */
-.leaflet-popup,
-.leaflet-popup-content-wrapper,
-.leaflet-popup-content {
-  background: none !important;
-  box-shadow: none !important;
-  border: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
+.filter-group {
+  flex: 1 1 300px;
+  min-width: 280px;
 }
 
-/* Hide default close button */
-.leaflet-popup-close-button {
-  display: none !important;
+.filter-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.95rem;
 }
 
-/* Hide popup tip */
-.leaflet-popup-tip-container {
-  display: none !important;
+.filter-select,
+.filter-input {
+  padding: 10px 12px;
+  border: 2px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background-color: white;
 }
 
-/* Custom popup styling */
+.filter-select:focus,
+.filter-input:focus {
+  border-color: #4dabf7;
+  box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.25);
+  outline: none;
+}
+
+/* Popup Styles */
 .popup-content {
   position: relative;
-  background-color: white;
-  border: 2px solid #0066cc;
+  background: white;
+  padding: 1rem;
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   min-width: 250px;
-  max-width: 300px;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.6;
 }
 
-/* Custom close button */
 .popup-close {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 20px;
-  height: 20px;
-  font-size: 18px;
-  color: #666;
-  cursor: pointer;
+  top: 5px;
+  right: 5px;
   background: none;
   border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0 5px;
 }
 
 .popup-close:hover {
-  color: #333;
+  color: #495057;
 }
 
-.popup-content strong {
-  font-weight: 600;
-  display: inline-block;
-  margin-bottom: 4px;
+/* Messages */
+.loading-message {
+  text-align: center;
+  padding: 20px;
+  color: #4a5568;
+  font-size: 1.1rem;
 }
 
-.popup-content a {
-  color: #0066cc;
-  text-decoration: none;
+.error-message {
+  color: #dc3545;
+  padding: 15px;
+  margin: 15px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  font-size: 0.95rem;
 }
 
-.popup-content a:hover {
-  text-decoration: underline;
+/* Map Container */
+.map-container {
+  height: 700px;
+  width: calc(100% - 30px);
+  margin: 0 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .filters-container {
+    flex-direction: column;
+    gap: 15px;
+    margin: 15px 10px;
+  }
+
+  .filter-group {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .map-container {
+    height: 500px;
+    margin: 0 10px 15px;
+  }
+
+  .filter-select,
+  .filter-input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .map-container {
+    height: 400px;
+  }
 }
