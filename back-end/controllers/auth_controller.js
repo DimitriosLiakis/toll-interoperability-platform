@@ -6,6 +6,7 @@ const dotenv = require('dotenv').config();
 const dbService = db.getDbServiceInstance();
 
 const authenticate = async (req, res) => {
+    console.log("We are in LOGIN")
     const { user_email, user_password } = req.body;    
     if (!user_email || !user_password) {
       console.error('Missing email or password in request body.');

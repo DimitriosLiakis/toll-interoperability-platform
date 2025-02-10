@@ -15,6 +15,7 @@ const options = {
 };
 
 // Create HTTPS server
+// http.createServer(app).listen(8080);
 https.createServer(options, app).listen(PORT, () => {
     console.log(`🚀 HTTPS Server running on port ${PORT}`);
 });
