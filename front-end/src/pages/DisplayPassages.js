@@ -13,7 +13,7 @@ const DisplayPassages = () => {
     const fetchCsv = async () => {
       try {
         // Fetch the CSV file from the server
-        const response = await axios.get('http://localhost:9115/uploads/passages.csv', {
+        const response = await axios.get('https://localhost:9115/uploads/passages.csv', {
           responseType: 'blob', // Fetch as a Blob
         });
 

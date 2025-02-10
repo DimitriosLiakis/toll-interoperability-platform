@@ -126,7 +126,7 @@ const DebtsPage = () => {
         throw new Error('Δεν βρέθηκε το token. Παρακαλώ συνδεθείτε ξανά.');
       }
 
-      const response = await fetch('http://localhost:9115/api/get_debts_optimization', {
+      const response = await fetch('https://localhost:9115/api/get_debts_optimization', {
         headers: {
           'Content-Type': 'application/json',
           'x-observatory-auth': token,
@@ -171,7 +171,7 @@ const DebtsPage = () => {
         throw new Error('Δεν βρέθηκε το token. Παρακαλώ συνδεθείτε ξανά.');
       }
 
-      const response = await fetch('http://localhost:9115/api/cancel_debts', {
+      const response = await fetch('https://localhost:9115/api/cancel_debts', {
         method: 'PATCH', // Changed from 'POST' to 'PATCH'
         headers: {
           'Content-Type': 'application/json',

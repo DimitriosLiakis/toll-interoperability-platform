@@ -22,7 +22,8 @@
     "react-select": "^5.8.3",
     "react-toastify": "^11.0.2",
     "recharts": "^2.13.3",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "proxy": "https://localhost:9115"
   },
   "scripts": {
     "start": "react-scripts start",

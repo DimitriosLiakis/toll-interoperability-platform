@@ -104,7 +104,7 @@ function Map() {
           return;
         }
 
-        const response = await axios.get("http://localhost:9115/api/tolls", {
+        const response = await axios.get("https://localhost:9115/api/tolls", {
           headers: {
             "Content-Type": "application/json",
             "x-observatory-auth": token, // Attach JWT token here

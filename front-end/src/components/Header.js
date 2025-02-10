@@ -16,7 +16,7 @@ function Header({ isLoggedIn, setIsLoggedIn }) {
     }
 
     try {
-      const response = await fetch('http://localhost:9115/api/logout', {
+      const response = await fetch('https://localhost:9115/api/logout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -21,13 +21,13 @@ const FileUpload = () => {
 
     try {
       // Upload to /uploads
-      const uploadResponse = await axios.post('http://localhost:5000/uploads', formData, {
+      const uploadResponse = await axios.post('https://localhost:5000/uploads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       if (uploadResponse.status === 200) {
         // Request to /api/passing_toll
-        const response = await axios.post('http://localhost:5000/api/passing_toll', {
+        const response = await axios.post('https://localhost:5000/api/passing_toll', {
           fileName: file.name,
         });
         setData(response.data);
