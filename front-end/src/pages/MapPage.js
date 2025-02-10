@@ -70,22 +70,14 @@ function Map() {
     };
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
+
 
   useEffect(() => {
     const fetchTolls = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          handleLogout();
-          return;
-        }
+       
 
         const response = await axios.get("https://localhost:9115/api/tolls", {
-          headers: { "x-observatory-auth": token },
         });
 
         if (response.status === 200) {
@@ -97,8 +89,8 @@ function Map() {
         if (err.response) {
           switch (err.response.status) {
             case 400: setError("Άκυρο αίτημα"); break;
-            case 401: handleLogout(); break;
-            case 404: setError("Δεν βρέθηκε η πόρος"); break;
+            case 401:  setError("Ανεπαρκή δικαιώματα πρόσβασης"); break;
+            case 404: setError("Δεν βρέθηκε ο πόρος"); break;
             case 500: setError("Σφάλμα διακομιστή"); break;
             default: setError(err.response.data?.error || "Σφάλμα");
           }
@@ -136,7 +128,10 @@ function Map() {
               <strong>${toll.name}</strong><br/>
               <strong>Operator:</strong> ${operatorTranslations[toll.operator] || toll.operator}<br/>
               <strong>Email:</strong> <a href="mailto:${toll.email}">${toll.email}</a><br/>
-              <strong>Prices:</strong><br/>${toll.prices.map(price => `${price}<br/>`).join("")}
+              <strong>Prices:</strong><br/>
+              ${toll.prices.map((price, index) => 
+                `Κατηγορία ${index + 1}: ${parseFloat(price).toFixed(2)}€<br/>`
+              ).join("")}
             </div>`,
             { closeButton: false, className: "custom-popup" }
           );
