@@ -84,7 +84,7 @@ const CsvSection = ({ title, csvData }) => {
   // Function to handle CSV download with Greek headers
   const handleDownload = () => {
     // Replace English headers with Greek headers
-    const greekHeaders = ['Οφειλέτης', 'Δανειστής', 'Ποσό'];
+    const greekHeaders = ['Οφειλέτης', 'Δανειστής', 'Ποσό (€)'];
     const dataRows = filteredRows.slice(1).map((row) => {
       const [debtor, creditor, amount] = row;
       const translatedDebtor = namesMapping[debtor.trim()] || debtor;
