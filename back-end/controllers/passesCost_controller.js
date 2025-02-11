@@ -19,6 +19,15 @@ const passesCost_controller = async (req, res, next) => {
         if (!/^\d{8}$/.test(date_from) || !/^\d{8}$/.test(date_to)) {
             return res.status(400).json({ error: 'Invalid date format. Use YYYYMMDD.' }); // 400 Bad Request
         }
+        const validPairs = ["AM", "EG", "GE", "KO", "MO", "NAO", "NO", "OO"];
+
+        const isStationOpDifferent = validPairs.every(pair => !tollOpID.startsWith(pair));
+        const isTagOpDifferent = validPairs.every(pair => !tagOpID.startsWith(pair));
+        
+        if (isStationOpDifferent || isTagOpDifferent) {
+            return res.status(400).json({ error: 'Invalid OperatorID' });
+        }
+        
 
         // Διαμόρφωση των ημερομηνιών
         const formattedDateFrom = `${date_from.slice(0, 4)}-${date_from.slice(4, 6)}-${date_from.slice(6, 8)}`;
