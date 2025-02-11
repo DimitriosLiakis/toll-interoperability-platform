@@ -42,7 +42,7 @@ function LoginPage({ setIsLoggedIn }) {
     setLoading(true); // Start loading
     try {
       // Make a POST request to the /api/login endpoint
-      const response = await fetch("https://localhost:9115/api/login", {
+      const response = await fetch("http://localhost:9115/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
