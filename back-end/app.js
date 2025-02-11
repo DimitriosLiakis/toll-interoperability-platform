@@ -55,5 +55,13 @@ app.use('/api/admin', adminRouter);
 app.get('/', (req, res) => {
     res.send('Simple root-route');
 });
+app.use('/api/*', (req, res) => {
+    res.status(400).json({ error: 'Invalid API endpoint' });
+});
+
+// Catch-all 404 handler for non-API routes
+app.use((req, res) => {
+    res.status(404).json({ error: 'Not found' });
+});
 
 module.exports = app;
