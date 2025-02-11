@@ -82,22 +82,6 @@ CREATE TABLE `Debt` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `Driver`
---
-
-DROP TABLE IF EXISTS `Driver`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Driver` (
-  `driver_id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL,
-  `phone` varchar(15) DEFAULT NULL,
-  `email` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`driver_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `Passages`
 --
 
