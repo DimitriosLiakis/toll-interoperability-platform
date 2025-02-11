@@ -76,25 +76,51 @@ const readCSVFile = (filePath) => {
     });
 };
 exports.resetPasses = async (req, res) => {
-    const dbServiceInstance = DbService.getDbServiceInstance();
-
     try {
-        // Clear Debt and Passages tables
-        await dbServiceInstance.resetPasses();
-
-        // Optional: Initialize the admin account
-        await dbServiceInstance.initializeAdminAccount();
-
-        res.status(200).json({ status: "OK" });
+      const dbServiceInstance = DbService.getDbServiceInstance();
+  
+      // 1️⃣ Clear Debt and Passages tables
+      await dbServiceInstance.resetPasses();
+  
+      // 2️⃣ Initialize admin account: username=admin, password=freepasses4all
+      await dbServiceInstance.initializeAdminAccount(); 
+  
+      // 3️⃣ Return success
+      return res.status(200).json({ status: "OK" });
     } catch (error) {
-        console.error("Error resetting passes:", error.message);
-        res.status(500).json({ status: "failed", info: error.message });
+      console.error("Error resetting passes:", error.message);
+      return res
+        .status(500)
+        .json({ status: "failed", info: error.message });
+    }
+  };
+exports.setUserRole = async (req, res) => {
+    try {
+    const dbServiceInstance = DbService.getDbServiceInstance();
+      const { user_email, user_role } = req.body;
+      if (!user_email || !user_role) {
+        return res.status(400).json({ error: 'user_email and user_role are required' });
+      }
+  
+      // Check if user exists
+      const existingUser = await dbServiceInstance.getUser(user_email);
+      if (!existingUser) {
+        return res.status(404).json({ error: `User "${user_email}" not found` });
+      }
+  
+      // Update role
+      await dbServiceInstance.updateUserRole(user_email, user_role);
+  
+      return res.status(200).json({ message: `User "${user_email}" role updated to "${user_role}"` });
+    } catch (err) {
+      console.error('Error in setUserRole:', err.message);
+      return res.status(500).json({ error: 'Internal server error' });
     }
 };
 exports.addPasses = async (req, res) => {
     try {
         // Define the predefined file path
-        const filePath = path.join(__dirname, "../uploads/passages.csv");
+        const filePath = path.join(__dirname, "../../Database_mysql/useful_scripts/passes-sample.csv");
         console.log("Using predefined file:", filePath);
 
         // Check if the file exists
@@ -121,43 +147,74 @@ exports.addPasses = async (req, res) => {
         res.status(500).json({ status: "failed", info: error.message });
     }
 };
+
 exports.getUsers = async (req, res) => {
     try {
-        // Call the database service to fetch all users
         const dbServiceInstance = DbService.getDbServiceInstance();
         const users = await dbServiceInstance.getAllUsers();
 
-        // Extract only the usernames
-        const usernames = users.map(user => user.username);
+        // Send only user_id, user_email, and user_role (not user_password)
+        const userList = users.map(user => ({
+            user_id: user.user_id,
+            user_email: user.user_email,
+            user_role: user.user_role
+        }));
 
-        res.status(200).json({ status: "OK", users: usernames });
+        res.status(200).json({ status: "OK", users: userList }); 
     } catch (error) {
         console.error("Error in getUsers:", error.message);
         res.status(500).json({ status: "failed", info: error.message });
     }
 };
-exports.userMod = async (req, res) => {
-    const { username, passw } = req.body;
 
-    if (!username || !passw) {
-        return res.status(400).json({ status: "failed", info: "Missing username or password" });
+exports.userMod = async (req, res) => {
+    const dbServiceInstance = DbService.getDbServiceInstance();
+    const { user_email, user_password } = req.body;
+
+    if (!user_email || !user_password) {
+        return res.status(400).json({ error: 'Email and password are required' });
     }
 
     try {
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(passw, 10);
+        const existingUser = await dbServiceInstance.getUser(user_email);
 
-        // Call the database service to create or update the user
-        const dbServiceInstance = DbService.getDbServiceInstance();
-        const result = await dbServiceInstance.createOrUpdateUser(username, hashedPassword);
-
-        if (result.modified) {
-            res.status(200).json({ status: "OK", message: `User '${username}' password updated successfully.` });
-        } else if (result.created) {
-            res.status(200).json({ status: "OK", message: `User '${username}' created successfully.` });
+        if (existingUser) {
+            // Update existing user's password
+            const hashedPassword = await bcrypt.hash(user_password, 10);
+            await dbServiceInstance.updateUserPassword(user_email, hashedPassword);
+            return res.status(200).json({ message: `User ${user_email} password updated successfully` });
+        } else {
+            // Create new user
+            const hashedPassword = await bcrypt.hash(user_password, 10);
+            await dbServiceInstance.createUser(user_email, hashedPassword);
+            return res.status(201).json({ message: `User ${user_email} created successfully` });
         }
     } catch (error) {
         console.error("Error in userMod:", error.message);
-        res.status(500).json({ status: "failed", info: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+exports.deleteUser = async (req, res) => {
+    const dbServiceInstance = DbService.getDbServiceInstance();
+    const { username } = req.params; // Retrieve from URL param
+  
+    if (!username) {
+      return res.status(400).json({ error: 'Username is required' });
+    }
+  
+    try {
+      const existingUser = await dbServiceInstance.getUser(username);
+  
+      if (!existingUser) {
+        return res.status(404).json({ error: `User "${username}" not found` });
+      }
+  
+      // If user exists, delete it
+      await dbServiceInstance.deleteUser(username);
+      return res.status(200).json({ message: `User "${username}" deleted successfully` });
+    } catch (error) {
+      console.error('Error in deleteUser:', error.message);
+      return res.status(500).json({ error: 'Internal server error' });
     }
 };

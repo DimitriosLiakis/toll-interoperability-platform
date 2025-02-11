@@ -60,4 +60,29 @@ const logout = (req, res) => {
   }
 }
 
-module.exports = { authenticate, logout };
+const whoami = (req, res) => {
+    // Retrieve the token from the request headers
+    const token = req.headers['x-observatory-auth'];
+
+    // If no token is provided, return an error
+    if (!token) {
+        return res.status(401).json({ error: 'Unauthorized: Token missing' });
+    }
+
+    try {
+        // Decode the JWT token
+        const decoded = jwt.verify(token, process.env.SECRET_KEY || 'mySuperSecretKey');
+
+        // Return user details
+        return res.status(200).json({
+            user_email: decoded.user_email,
+            user_role: decoded.user_role
+        });
+
+    } catch (err) {
+        return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
+    }
+};
+
+
+module.exports = { authenticate, logout , whoami };
