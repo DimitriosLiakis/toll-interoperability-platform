@@ -145,7 +145,7 @@ const AnalysisDashboard = () => {
                 return;
             }
 
-            const url = `https://localhost:9115/api/passAnalysis/${stationOpID}/${tagOpID}/${formattedDateFrom}/${formattedDateTo}`;
+            const url = `http://localhost:9115/api/passAnalysis/${stationOpID}/${tagOpID}/${formattedDateFrom}/${formattedDateTo}`;
 
             const response = await axios.get(url, {
                 params: { format },
@@ -266,7 +266,7 @@ const AnalysisDashboard = () => {
                 return;
             }
 
-            const url = `https://localhost:9115/api/chargesBy/${tollOpID}/${formattedDateFrom}/${formattedDateTo}`;
+            const url = `http://localhost:9115/api/chargesBy/${tollOpID}/${formattedDateFrom}/${formattedDateTo}`;
 
             const response = await axios.get(url, {
                 params: { format },
@@ -388,7 +388,7 @@ const AnalysisDashboard = () => {
                 return;
             }
 
-            const url = `https://localhost:9115/api/passesCost/${tollOpID}/${tagOpID}/${formattedDateFrom}/${formattedDateTo}`;
+            const url = `http://localhost:9115/api/passesCost/${tollOpID}/${tagOpID}/${formattedDateFrom}/${formattedDateTo}`;
 
             const response = await axios.get(url, {
                 params: { format },
@@ -509,7 +509,7 @@ const AnalysisDashboard = () => {
                 return;
             }
 
-            const url = `https://localhost:9115/api/tollStationPasses/${tollStationID}/${formattedDateFrom}/${formattedDateTo}`;
+            const url = `http://localhost:9115/api/tollStationPasses/${tollStationID}/${formattedDateFrom}/${formattedDateTo}`;
 
             const response = await axios.get(url, {
                 params: { format },
