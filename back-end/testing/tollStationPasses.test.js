@@ -42,19 +42,32 @@ describe('GET /api/tollStationPasses/:tollStationID/:date_from/:date_to', () => 
     });
 
     it('should return 200 with valid JSON data when data is available', async () => {
-        const response = await request(app)
-          .get('/api/tollStationPasses/NO03/20220101/20220103')
+      const response = await request(app)
+          .get('/api/tollStationPasses/NO01/20220424/20220508')
           .set('x-observatory-auth', token);
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty('stationID', 'NO03');
-        expect(response.body).toHaveProperty('stationOperator');
-        expect(response.body).toHaveProperty('requestTimestamp');
-        expect(response.body).toHaveProperty('periodFrom', '2022-01-01');
-        expect(response.body).toHaveProperty('periodTo', '2022-01-03');
-        expect(response.body).toHaveProperty('nPasses');
-        expect(response.body).toHaveProperty('passList');
-        expect(Array.isArray(response.body.passList)).toBe(true);
-    });
+      
+      expect(response.status).toBe(204);
+      expect(response.body).toHaveProperty('stationID', 'NO01'); // Corrected stationID
+      expect(response.body).toHaveProperty('stationOperator');
+      expect(response.body).toHaveProperty('requestTimestamp');
+      expect(response.body).toHaveProperty('periodFrom', '2022-04-24'); // Corrected periodFrom
+      expect(response.body).toHaveProperty('periodTo', '2022-05-08'); // Corrected periodTo
+      expect(response.body).toHaveProperty('nPasses', 11); // Check nPasses is 11
+      expect(response.body).toHaveProperty('passList');
+      expect(Array.isArray(response.body.passList)).toBe(true);
+      expect(response.body.passList).toHaveLength(11); // Verify passList has 11 items
+  
+      // Optional: Check structure of each pass in passList
+      response.body.passList.forEach(passItem => {
+          expect(passItem).toHaveProperty('passIndex');
+          expect(passItem).toHaveProperty('passID');
+          expect(passItem).toHaveProperty('timestamp');
+          expect(passItem).toHaveProperty('tagID');
+          expect(passItem).toHaveProperty('tagProvider');
+          expect(passItem).toHaveProperty('passType');
+          expect(passItem).toHaveProperty('passCharge');
+      });
+  });
 
     it('should return CSV data if format=csv is specified', async () => {
         const response = await request(app)

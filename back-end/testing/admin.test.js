@@ -84,7 +84,7 @@ describe("API Controller Tests", () => {
       const res = await request(app)
         .post("/api/admin/userMod")
         .set("x-observatory-auth", token)
-        .send({ username: "testuser", passw: "testpassword", user_role: "admin" });
+        .send({ username: "admin@yme.gov.gr", passw: "yme123!", user_role: "admin" });
 
       expect([200, 500]).toContain(res.status);
       if (res.status === 200) {
