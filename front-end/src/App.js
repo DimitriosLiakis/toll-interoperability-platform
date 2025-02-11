@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Header from './components/Header';
 import WelcomePage from './pages/WelcomePage';
 import MapPage from './pages/MapPage';
-import UploadPage from './pages/DisplayPassages';
 import DebtsPage from './pages/DebtsPage';
 import StatsDashboard from './pages/StatsDashboard';
 import MachineLearning from './pages/MachineLearning';
@@ -30,7 +29,6 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<WelcomePage />} />
           <Route path="/map" element={<MapPage />} />
-          <Route path="/upload" element={<UploadPage />} />
 
           {/* Protected Routes */}
           <Route
