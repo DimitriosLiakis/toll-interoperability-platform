@@ -21,10 +21,14 @@ const getTollStationPasses = async (req, res, next) => {
         if (tollStationID.length<4) {
             return res.status(400).json({ error: 'Wrong required parameter tollStationID' });
         }
-        const validPairs = ["AM", "EG", "GE", "KO", "MO", "NAO", "NO", "OO"];
+        validPairs.forEach(pair => {
+            if (tollStationID.startsWith(pair)) {
+                console.log(`Match found: ${pair}`);
+            }
+        });
 
         const isValid = validPairs.some(pair => tollStationID.startsWith(pair));
-        
+
         if (!isValid) {
             return res.status(400).json({ error: 'Wrong required parameter tollStationID' });
         }
