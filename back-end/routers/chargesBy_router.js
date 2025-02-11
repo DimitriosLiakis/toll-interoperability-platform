@@ -7,11 +7,10 @@ const { authenticateToken, authorizeRole } = require('../middlewares/authMiddlew
  * @openapi
  * /api/chargesBy/{tollOpID}/{date_from}/{date_to}:
  *   get:
- *     summary: Επιστροφή δεδομένων διέρξεων και κόστους μεταξύ εταιρειών.
+ *     summary: Retrieve toll transaction data and costs between companies.
  *     description: |
- *       Επιστρέφει τα δεδομένα των διέρξεων και του κόστους για έναν επιλεγμένο toll operator (tollOpID) και μια χρονική περίοδο.
- *       Οι ημερομηνίες πρέπει να παρέχονται σε μορφή YYYYMMDD. Το query parameter "format" μπορεί να χρησιμοποιηθεί για
- *       την επιστροφή της απάντησης σε μορφή CSV (π.χ. format=csv) ή JSON (προεπιλογή).
+ *       Returns toll transaction and cost data for a selected toll operator (tollOpID) within a specified date range.
+ *       Dates must be in YYYYMMDD format. The query parameter "format" can be used to request the response in CSV format (e.g., format=csv) or JSON (default).
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -20,29 +19,29 @@ const { authenticateToken, authorizeRole } = require('../middlewares/authMiddlew
  *         required: true
  *         schema:
  *           type: string
- *         description: Ο κωδικός του toll operator. Επιτρεπόμενες τιμές: AM, EG, GE, KO, MO, NAO, NO, OO.
+ *         description: "Toll operator ID. Allowed values: AM, EG, GE, KO, MO, NAO, NO, OO."
  *       - in: path
  *         name: date_from
  *         required: true
  *         schema:
  *           type: string
- *         description: Η αρχική ημερομηνία της περιόδου σε μορφή YYYYMMDD.
+ *         description: "Start date in YYYYMMDD format."
  *       - in: path
  *         name: date_to
  *         required: true
  *         schema:
  *           type: string
- *         description: Η τελική ημερομηνία της περιόδου σε μορφή YYYYMMDD.
+ *         description: "End date in YYYYMMDD format."
  *       - in: query
  *         name: format
  *         required: false
  *         schema:
  *           type: string
  *           default: json
- *         description: Ορίζει τη μορφή της απόκρισης. Επιλογές: "json" ή "csv".
+ *         description: "Specifies the response format. Options: json or csv."
  *     responses:
  *       200:
- *         description: Επιτυχής απόκριση με τα δεδομένα.
+ *         description: "Successful response with the requested data."
  *         content:
  *           application/json:
  *             schema:
@@ -69,11 +68,11 @@ const { authenticateToken, authorizeRole } = require('../middlewares/authMiddlew
  *                       passesCost:
  *                         type: number
  *       400:
- *         description: Λανθασμένη αίτηση λόγω ελλιπών ή μη έγκυρων παραμέτρων.
+ *         description: "Bad request due to missing or invalid parameters."
  *       500:
- *         description: Εσωτερικό σφάλμα του server.
+ *         description: "Internal server error."
  */
-router.get('/:tollOpID?/:date_from?/:date_to?', authenticateToken, authorizeRole(["users","admin"]), chargesBy_controller);
+router.get('/:tollOpID/:date_from/:date_to', authenticateToken, authorizeRole(["users","admin"]), chargesBy_controller);
 
 router.get('*', (req, res) => {
     console.log("400 - Route not found");
