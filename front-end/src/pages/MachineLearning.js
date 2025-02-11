@@ -1,10 +1,17 @@
-// src/MLDashboard.js
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from 'recharts';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './MachineLearning.css';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
+import { useNavigate } from 'react-router-dom';
 
 // Helper function to format dates as dd/mm/yyyy
 const formatDate = (dateString) => {
@@ -46,6 +53,11 @@ const minutesToTime = (minutes) => {
   return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 };
 
+// Helper function to parse a date string "yyyy-mm-dd" as a local Date
+const parseLocalDate = (dateString) => {
+  const [year, month, day] = dateString.split('-');
+  return new Date(year, month - 1, day);
+};
 
 // Full toll name mapping
 const tollNameMapping = {
@@ -303,6 +315,7 @@ const tollNameMapping = {
   OO27: "Σταθμός Διοδίων Κιάτου Πλευρικά (Από Πάτρα)",
   OO28: "Σταθμός Διοδίων Κιάτου Πλευρικά (Προς Πάτρα)",
 };
+
 export default function MLDashboard() {
   const [loading, setLoading] = useState(false);
   const [trainingStatus, setTrainingStatus] = useState('');
@@ -313,10 +326,9 @@ export default function MLDashboard() {
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
   const [forecastDate, setForecastDate] = useState('');
   const [selectedFunctionality, setSelectedFunctionality] = useState('');
-  
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
 
   const companies = [
     { value: 'AM', label: 'Αυτοκινητόδρομος Αιγαίου' },
@@ -345,24 +357,20 @@ export default function MLDashboard() {
     const checkToken = () => {
       const token = localStorage.getItem('token');
       if (!token) {
-        // No token found, redirect to login
         navigate('/login');
         return;
       }
 
       try {
-        // Decode the token to get payload
         const payload = JSON.parse(atob(token.split('.')[1]));
         const currentTime = Date.now() / 1000;
 
         if (payload.exp && payload.exp < currentTime) {
-          // Token expired
           alert('Η συνεδρία σας έχει λήξει. Παρακαλώ συνδεθείτε ξανά.');
           handleLogout();
           return;
         }
 
-        // Set isAdmin if user_email is admin@yme.gov.gr
         if (payload.user_email === 'admin@yme.gov.gr') {
           setIsAdmin(true);
         }
@@ -376,7 +384,6 @@ export default function MLDashboard() {
     checkToken();
   }, [navigate]);
 
-  // 1. Include the token in all your fetch calls by default
   const token = localStorage.getItem('token');
 
   const trainModels = async () => {
@@ -384,22 +391,20 @@ export default function MLDashboard() {
     setTrainingStatus('Training models...');
     setError('');
     try {
-      // 2. Pass the token in the request header
       const response = await fetch('https://localhost:9115/api/training', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-observatory-auth': token, 
+          'x-observatory-auth': token,
         },
       });
 
       if (response.status === 200) {
-        const data = await response.json(); // If your backend returns a success message
+        const data = await response.json();
         setTrainingStatus('Training completed successfully');
       } else if (response.status === 204) {
         setError('Η εκπαίδευση ολοκληρώθηκε, αλλά δεν επέστρεψε δεδομένα.');
       } else {
-        // Handle specific status codes
         switch (response.status) {
           case 400:
             throw new Error('Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.');
@@ -416,8 +421,6 @@ export default function MLDashboard() {
     } catch (err) {
       console.error('Error during training:', err);
       setError('Failed to train models: ' + err.message);
-
-      // Handle Unauthorized errors by logging out
       if (err.message.includes('Unauthorized')) {
         handleLogout();
       }
@@ -442,27 +445,24 @@ export default function MLDashboard() {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'x-observatory-auth': token, 
+            'x-observatory-auth': token,
           },
         }
       );
 
       if (response.status === 200) {
         const data = await response.json();
-
-        // Transform backend response
         const formattedData = data.map((item) => ({
           ...item,
           passage_date: formatToDateOnly(item.passage_date),
           predicted_hour: formatHourTo24h(item.predicted_hour),
-          predicted_hour_minutes: timeToMinutes(formatHourTo24h(item.predicted_hour)), // for chart
+          predicted_hour_minutes: timeToMinutes(formatHourTo24h(item.predicted_hour)),
         }));
 
         setPredictions(formattedData);
       } else if (response.status === 204) {
         setError('Δεν επιστράφηκαν δεδομένα για τα κριτήρια που δώσατε.');
       } else {
-        // Handle specific status codes
         switch (response.status) {
           case 400:
             throw new Error('Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.');
@@ -479,8 +479,6 @@ export default function MLDashboard() {
     } catch (err) {
       console.error('Error fetching predictions:', err);
       setError('Failed to get predictions: ' + err.message);
-
-      // Handle Unauthorized errors by logging out
       if (err.message.includes('Unauthorized')) {
         handleLogout();
       }
@@ -504,15 +502,13 @@ export default function MLDashboard() {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'x-observatory-auth': token, 
+            'x-observatory-auth': token,
           },
         }
       );
 
       if (response.status === 200) {
         const data = await response.json();
-
-        // Transform backend response
         const formattedData = data.predictions.map((predictedHour, index) => {
           const tollID = `${selectedCompany}${String(index + 1).padStart(2, '0')}`;
           return {
@@ -526,7 +522,6 @@ export default function MLDashboard() {
       } else if (response.status === 204) {
         setError('Δεν επιστράφηκαν δεδομένα για την επιλεγμένη ημερομηνία.');
       } else {
-        // Handle specific status codes
         switch (response.status) {
           case 400:
             throw new Error('Άκυρο αίτημα. Παρακαλώ ελέγξτε τις εισροές σας.');
@@ -543,8 +538,6 @@ export default function MLDashboard() {
     } catch (err) {
       console.error('Error fetching forecast:', err);
       setError('Failed to fetch forecast: ' + err.message);
-
-      // Handle Unauthorized errors by logging out
       if (err.message.includes('Unauthorized')) {
         handleLogout();
       }
@@ -553,15 +546,22 @@ export default function MLDashboard() {
     }
   };
 
+  // Update the date change handlers so that the date is stored as "yyyy-mm-dd"
   const handleDatePickerChange = (field, date) => {
     if (!date) return;
-    const formattedValue = date.toISOString().split('T')[0]; // yyyy-mm-dd
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formattedValue = `${year}-${month}-${day}`;
     setDateRange((prev) => ({ ...prev, [field]: formattedValue }));
   };
 
   const handleForecastDateChange = (date) => {
     if (!date) return;
-    const formattedValue = date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formattedValue = `${year}-${month}-${day}`;
     setForecastDate(formattedValue);
   };
 
@@ -569,7 +569,7 @@ export default function MLDashboard() {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">Προβλέψεις Κυκλοφορίας</h1>
 
-      {/* === Training Section (Conditionally Rendered) === */}
+      {/* Training Section (visible only for admin users) */}
       {isAdmin && (
         <div className="mb-8 p-6 border rounded bg-white">
           <h2 className="text-xl font-bold mb-4">Εκπαίδευση Μοντέλων</h2>
@@ -588,7 +588,7 @@ export default function MLDashboard() {
         </div>
       )}
 
-      {/* === Prediction / Forecast Selection === */}
+      {/* Prediction / Forecast Selection */}
       <div className="p-6 border rounded bg-white">
         <h2 className="text-xl font-bold mb-4">Επιλογή Πρόβλεψης</h2>
         <div className="mb-4">
@@ -607,7 +607,7 @@ export default function MLDashboard() {
           </select>
         </div>
 
-        {/* === PREDICTIONS === */}
+        {/* PREDICTIONS */}
         {selectedFunctionality === 'predictions' && (
           <>
             <h2 className="text-xl font-bold mb-4">Πρόβλεψη ώρας αιχμής</h2>
@@ -630,7 +630,7 @@ export default function MLDashboard() {
                 <div>
                   <label className="block text-sm font-medium mb-1">Από</label>
                   <ReactDatePicker
-                    selected={dateRange.from ? new Date(dateRange.from) : null}
+                    selected={dateRange.from ? parseLocalDate(dateRange.from) : null}
                     onChange={(date) => handleDatePickerChange('from', date)}
                     dateFormat="dd/MM/yyyy"
                     placeholderText="dd/mm/yyyy"
@@ -640,7 +640,7 @@ export default function MLDashboard() {
                 <div>
                   <label className="block text-sm font-medium mb-1">Έως</label>
                   <ReactDatePicker
-                    selected={dateRange.to ? new Date(dateRange.to) : null}
+                    selected={dateRange.to ? parseLocalDate(dateRange.to) : null}
                     onChange={(date) => handleDatePickerChange('to', date)}
                     dateFormat="dd/MM/yyyy"
                     placeholderText="dd/mm/yyyy"
@@ -659,7 +659,7 @@ export default function MLDashboard() {
           </>
         )}
 
-        {/* === FORECAST === */}
+        {/* FORECAST */}
         {selectedFunctionality === 'forecast' && (
           <>
             <h2 className="text-xl font-bold mb-4">Πρόβλεψη μέγιστης ροής οχημάτων</h2>
@@ -681,7 +681,7 @@ export default function MLDashboard() {
               <div>
                 <label className="block text-sm font-medium mb-1">Ημερομηνία</label>
                 <ReactDatePicker
-                  selected={forecastDate ? new Date(forecastDate) : null}
+                  selected={forecastDate ? parseLocalDate(forecastDate) : null}
                   onChange={handleForecastDateChange}
                   dateFormat="dd/MM/yyyy"
                   placeholderText="dd/mm/yyyy"
@@ -699,14 +699,14 @@ export default function MLDashboard() {
           </>
         )}
 
-        {/* === ERROR HANDLING === */}
+        {/* ERROR HANDLING */}
         {error && (
           <div className="mt-4 p-4 bg-red-100 border border-red-400 rounded text-red-700">
             {error}
           </div>
         )}
 
-        {/* === RESULTS FOR PREDICTIONS === */}
+        {/* RESULTS FOR PREDICTIONS */}
         {predictions.length > 0 && selectedFunctionality === 'predictions' && (
           <div className="mt-6">
             <h3 className="text-lg font-bold mb-4">Αποτελέσματα πρόβλεψης</h3>
@@ -732,10 +732,7 @@ export default function MLDashboard() {
               <LineChart width={800} height={400} data={predictions}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="passage_date" />
-                <YAxis
-                  domain={[0, 1440]} // 0–1440 minutes in a day
-                  tickFormatter={minutesToTime}
-                />
+                <YAxis domain={[0, 1440]} tickFormatter={minutesToTime} />
                 <Tooltip formatter={(value) => minutesToTime(value)} />
                 <Legend />
                 <Line
@@ -757,7 +754,7 @@ export default function MLDashboard() {
           </div>
         )}
 
-        {/* === RESULTS FOR FORECAST === */}
+        {/* RESULTS FOR FORECAST */}
         {forecastData.length > 0 && selectedFunctionality === 'forecast' && (
           <div className="mt-6">
             <h3 className="text-lg font-bold mb-4">
