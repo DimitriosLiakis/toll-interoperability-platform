@@ -19,7 +19,7 @@ const passAnalysis_controller = async (req, res, next) => {
             return res.status(400).json({ error: 'Invalid date format. Use YYYYMMDD.' });
         }
 
-        // Convert dates to YYYY-MM-DD
+        // Convert dates to YYYY-MM-DD  
         const formattedDateFrom = `${date_from.slice(0, 4)}-${date_from.slice(4, 6)}-${date_from.slice(6, 8)}`;
         const formattedDateTo = `${date_to.slice(0, 4)}-${date_to.slice(4, 6)}-${date_to.slice(6, 8)}`;
 

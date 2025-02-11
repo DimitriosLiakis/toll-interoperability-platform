@@ -1,0 +1,51 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "TollAnalysis APP API",
+      "version": "1.0",
+      "description": "This API supports the operations of the TollAnalysis app for soft-eng course"
+    },
+    "servers": [
+      {
+        "url": "https://localhost:9115"
+      }
+    ],
+    "paths": {
+      "/users": {
+        "get": {
+          "summary": "Λήψη λίστας χρηστών",
+          "responses": {
+            "200": {
+              "description": "Επιτυχής απόκριση",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "User": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+  
