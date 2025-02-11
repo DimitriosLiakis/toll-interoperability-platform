@@ -8,7 +8,6 @@ dotenv.config();
 const PORT = process.env.PORT || 9115;
 const HTTP_PORT = 8080; // You can choose any free port for HTTP
 
-<<<<<<< HEAD
 // // Load SSL certificate
 // const options = {
 //     key: fs.readFileSync('./key.pem'),
@@ -20,8 +19,6 @@ const HTTP_PORT = 8080; // You can choose any free port for HTTP
 // https.createServer(options, app).listen(PORT, () => {
 //     console.log(`🚀 HTTPS Server running on port ${PORT}`);
 // });
-=======
->>>>>>> 09442e730983c5c989760ddefa3bf232cffbea3a
 app.listen(PORT, () => {
     console.log(`App is running on port ${PORT}`);
 });
