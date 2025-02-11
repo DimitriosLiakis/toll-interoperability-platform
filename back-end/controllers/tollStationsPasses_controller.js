@@ -41,27 +41,25 @@ const getTollStationPasses = async (req, res, next) => {
 
         let str1 = tollStationID;
         let result1 = str1.replace(/\d+/g, ''); // Εξαγωγή του ονόματος του χειριστή της σταθμού
-
+        const formatTimestamp = (timestamp) => {
+            const date = new Date(timestamp);
+            return date.toISOString().replace('T', ' ').slice(0, 19); // Converts to "YYYY-MM-DD HH:MM:SS"
+        };
         const response = {
             //user: { 
              //   username: user.username, // Προσθήκη δεδομένων χρήστη από το token
                // id: user.id, // Αν υπάρχει ID χρήστη
-            //}, 
-            stationID: tollStationID,
-            stationOperator: result1,
-            requestTimestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
-            periodFrom: formattedDateFrom,
-            periodTo: formattedDateTo,
-            nPasses: passes.length,
+            //},             
             passList: passes.map((pass, index) => ({
                 passIndex: index + 1,
                 passID: pass.passage_id,
-                timestamp: pass.timestamp,
+                timestamp: formatTimestamp(pass.timestamp), // Fix timestamp format
                 tagID: pass.tagRef,
                 tagProvider: pass.tagHomeID,
-                passType: pass.tollID === tollStationID ? 'home' : 'visitor',
+                passType: result1 === pass.tagHomeID ? 'home' : 'visitor',
                 passCharge: parseFloat(pass.charge),
             })),
+            
         };
 
         if (format === 'csv') {
