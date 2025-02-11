@@ -46,10 +46,7 @@ const getTollStationPasses = async (req, res, next) => {
             return date.toISOString().replace('T', ' ').slice(0, 19); // Converts to "YYYY-MM-DD HH:MM:SS"
         };
         const response = {
-            //user: { 
-             //   username: user.username, // Προσθήκη δεδομένων χρήστη από το token
-               // id: user.id, // Αν υπάρχει ID χρήστη
-            //},             
+       
             passList: passes.map((pass, index) => ({
                 passIndex: index + 1,
                 passID: pass.passage_id,
