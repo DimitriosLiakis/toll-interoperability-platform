@@ -452,14 +452,21 @@ export default function MLDashboard() {
 
       if (response.status === 200) {
         const data = await response.json();
+
+        // Μετατροπή των αποτελεσμάτων
         const formattedData = data.map((item) => ({
           ...item,
           passage_date: formatToDateOnly(item.passage_date),
           predicted_hour: formatHourTo24h(item.predicted_hour),
-          predicted_hour_minutes: timeToMinutes(formatHourTo24h(item.predicted_hour)),
+          predicted_hour_minutes: timeToMinutes(formatHourTo24h(item.predicted_hour)), // για το γράφημα
         }));
 
-        setPredictions(formattedData);
+        // Φίλτρο για να απομακρύνουμε τις διπλές εγγραφές (βάσει passage_date)
+        const uniqueData = formattedData.filter((item, index, self) =>
+          index === self.findIndex((t) => t.passage_date === item.passage_date)
+        );
+
+        setPredictions(uniqueData);
       } else if (response.status === 204) {
         setError('Δεν επιστράφηκαν δεδομένα για τα κριτήρια που δώσατε.');
       } else {
@@ -546,7 +553,7 @@ export default function MLDashboard() {
     }
   };
 
-  // Update the date change handlers so that the date is stored as "yyyy-mm-dd"
+  // Αποθήκευση της ημερομηνίας σε μορφή "yyyy-mm-dd"
   const handleDatePickerChange = (field, date) => {
     if (!date) return;
     const year = date.getFullYear();
@@ -569,7 +576,7 @@ export default function MLDashboard() {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">Προβλέψεις Κυκλοφορίας</h1>
 
-      {/* Training Section (visible only for admin users) */}
+      {/* Εκπαίδευση Μοντέλων (μόνο για διαχειριστές) */}
       {isAdmin && (
         <div className="mb-8 p-6 border rounded bg-white">
           <h2 className="text-xl font-bold mb-4">Εκπαίδευση Μοντέλων</h2>
@@ -588,7 +595,7 @@ export default function MLDashboard() {
         </div>
       )}
 
-      {/* Prediction / Forecast Selection */}
+      {/* Επιλογή Πρόβλεψης / Πρόβλεψης */}
       <div className="p-6 border rounded bg-white">
         <h2 className="text-xl font-bold mb-4">Επιλογή Πρόβλεψης</h2>
         <div className="mb-4">
@@ -607,10 +614,10 @@ export default function MLDashboard() {
           </select>
         </div>
 
-        {/* PREDICTIONS */}
+        {/* Πρόβλεψη Ώρας Αιχμής */}
         {selectedFunctionality === 'predictions' && (
           <>
-            <h2 className="text-xl font-bold mb-4">Πρόβλεψη ώρας αιχμής</h2>
+            <h2 className="text-xl font-bold mb-4">Πρόβλεψη Ώρας Αιχμής</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Εταιρεία</label>
@@ -659,10 +666,10 @@ export default function MLDashboard() {
           </>
         )}
 
-        {/* FORECAST */}
+        {/* Πρόβλεψη Μέγιστης Ροής Οχημάτων */}
         {selectedFunctionality === 'forecast' && (
           <>
-            <h2 className="text-xl font-bold mb-4">Πρόβλεψη μέγιστης ροής οχημάτων</h2>
+            <h2 className="text-xl font-bold mb-4">Πρόβλεψη Μέγιστης Ροής Οχημάτων</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Εταιρεία</label>
@@ -699,17 +706,17 @@ export default function MLDashboard() {
           </>
         )}
 
-        {/* ERROR HANDLING */}
+        {/* Εμφάνιση σφάλματος */}
         {error && (
           <div className="mt-4 p-4 bg-red-100 border border-red-400 rounded text-red-700">
             {error}
           </div>
         )}
 
-        {/* RESULTS FOR PREDICTIONS */}
+        {/* Αποτελέσματα Πρόβλεψης */}
         {predictions.length > 0 && selectedFunctionality === 'predictions' && (
           <div className="mt-6">
-            <h3 className="text-lg font-bold mb-4">Αποτελέσματα πρόβλεψης</h3>
+            <h3 className="text-lg font-bold mb-4">Αποτελέσματα Πρόβλεψης</h3>
             <table className="table-auto w-full border-collapse border border-gray-200 text-left">
               <thead>
                 <tr className="bg-gray-100">
@@ -727,7 +734,7 @@ export default function MLDashboard() {
               </tbody>
             </table>
 
-            {/* Chart for Predictions */}
+            {/* Γράφημα για τις προβλέψεις */}
             <div className="mt-6">
               <LineChart width={800} height={400} data={predictions}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -747,14 +754,13 @@ export default function MLDashboard() {
             {/* Disclaimer */}
             <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded text-yellow-700">
               <p>
-                <strong>Προσοχή:</strong> Οι προβλέψεις για ημερομηνίες που απέχουν πολύ από την σημερινή
-                ημερομηνία μπορεί να έχουν χαμηλή ακρίβεια.
+                <strong>Προσοχή:</strong> Οι προβλέψεις για ημερομηνίες που απέχουν πολύ από την σημερινή ημερομηνία μπορεί να έχουν χαμηλή ακρίβεια.
               </p>
             </div>
           </div>
         )}
 
-        {/* RESULTS FOR FORECAST */}
+        {/* Αποτελέσματα Πρόβλεψης Ροής Οχημάτων */}
         {forecastData.length > 0 && selectedFunctionality === 'forecast' && (
           <div className="mt-6">
             <h3 className="text-lg font-bold mb-4">
