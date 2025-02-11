@@ -77,7 +77,7 @@ function Map() {
       try {
        
 
-        const response = await axios.get("https://localhost:9115/api/tolls", {
+        const response = await axios.get("http://localhost:9115/api/tolls", {
         });
 
         if (response.status === 200) {
