@@ -19,16 +19,15 @@ const passAnalysis_controller = async (req, res, next) => {
             return res.status(400).json({ error: 'Invalid date format. Use YYYYMMDD.' });
         }
 
-
         const validPairs = ["AM", "EG", "GE", "KO", "MO", "NAO", "NO", "OO"];
 
-        let isDifferent = validPairs.every(pair => !stationOpID.startsWith(pair));
-
-        isDifferent = validPairs.every(pair => !tagOpID.startsWith(pair));
-
-        if (!isDifferent) {
+        const isStationOpDifferent = validPairs.every(pair => !stationOpID.startsWith(pair));
+        const isTagOpDifferent = validPairs.every(pair => !tagOpID.startsWith(pair));
+        
+        if (isStationOpDifferent || isTagOpDifferent) {
             return res.status(400).json({ error: 'Invalid OperatorID' });
         }
+        
 
         const formattedDateFrom = `${date_from.slice(0, 4)}-${date_from.slice(4, 6)}-${date_from.slice(6, 8)}`;
         const formattedDateTo = `${date_to.slice(0, 4)}-${date_to.slice(4, 6)}-${date_to.slice(6, 8)}`;
