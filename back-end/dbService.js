@@ -362,7 +362,15 @@ ORDER BY grouped.passage_date;
             connection.release();
         }
     }
-    
+    async getUser(user_email){
+        try {
+            const query = `SELECT * FROM users WHERE user_email = ?`;
+            const [rows] = await promisePool.query(query, [user_email]);
+            return rows[0];
+        } catch (error) {
+            console.error('Error in getUser:', error.message);
+        }
+    }
     async resetPasses() {
         const connection = await promisePool.getConnection();
         try {
@@ -384,73 +392,90 @@ ORDER BY grouped.passage_date;
     async initializeAdminAccount() {
         const connection = await promisePool.getConnection();
         try {
-            await connection.beginTransaction();
-    
-            // Hash the password for "freepasses4all"
-            const hashedPassword = await bcrypt.hash("freepasses4all", 10);
-    
-            // Check if the admin account exists
-            const [rows] = await connection.query("SELECT * FROM users WHERE user_email = 'admin@yme.gov.gr'");
-            if (rows.length === 0) {
-                // Insert the admin account if it doesn't exist
-                await connection.query(
-                    "INSERT INTO users (user_email, user_password, user_role) VALUES (?, ?, ?)",
-                    ["admin@yme.gov.gr", hashedPassword, "admin"]
-                );
-                console.log("Admin account initialized");
-            } else {
-                // Update the password of the existing admin account
-                await connection.query(
-                    "UPDATE users SET user_password = ? WHERE user_email = ?",
-                    [hashedPassword, "admin@yme.gov.gr"]
-                );
-                console.log("Admin account password updated");
-            }
-    
-            await connection.commit();
+          await connection.beginTransaction();
+      
+          // Hash the default admin password
+          const hashedPassword = await bcrypt.hash("freepasses4all", 10);
+      
+          // Check if the user with user_email='admin' exists
+          const [rows] = await connection.query("SELECT * FROM users WHERE user_email = 'admin'");
+          if (rows.length === 0) {
+            // Insert a new admin user if not found
+            await connection.query(
+              "INSERT INTO users (user_email, user_password, user_role) VALUES (?, ?, 'admin')",
+              ["admin", hashedPassword]
+            );
+            console.log("Admin account (admin/freepasses4all) created.");
+          } else {
+            // Update the existing user to reset its password to freepasses4all
+            await connection.query(
+              "UPDATE users SET user_password = ?, user_role='admin' WHERE user_email = 'admin'",
+              [hashedPassword]
+            );
+            console.log("Admin account password reset to freepasses4all.");
+          }
+      
+          await connection.commit();
         } catch (error) {
-            await connection.rollback();
-            console.error("Error in initializeAdminAccount:", error.message);
-            throw error;
+          await connection.rollback();
+          console.error("Error in initializeAdminAccount:", error.message);
+          throw error;
         } finally {
-            connection.release();
+          connection.release();
+        }
+    }
+    async updateUserRole(user_email, newRole) {
+        try {
+          // This assumes your 'users' table has user_role = ENUM(...) containing newRole
+          const query = "UPDATE users SET user_role = ? WHERE user_email = ?";
+          await promisePool.query(query, [newRole, user_email]);
+          return { updated: true };
+        } catch (error) {
+          console.error('Error in updateUserRole:', error.message);
+          throw error;
         }
     }
     async getAllUsers() {
         try {
-            const query = "SELECT user_email AS username FROM users";
-            const [rows] = await promisePool.query(query);
+            // Use promisePool.query instead of connection.query
+            const [rows] = await promisePool.query("SELECT user_id, user_email, user_role FROM users");
+    
             return rows;
         } catch (error) {
-            console.error("Error in getAllUsers:", error.message);
-            throw error;
+            console.error("Database error in getAllUsers:", error.message);
+            return [];
         }
     }
-    async createOrUpdateUser(user_email, hashedPassword) {
+    async updateUserPassword(user_email, hashedPassword) {
         try {
-            // Έλεγχος αν υπάρχει ήδη χρήστης με το δοσμένο email
-            const checkQuery = "SELECT COUNT(*) AS count FROM users WHERE user_email = ?";
-            const [rows] = await promisePool.query(checkQuery, [user_email]);
-    
-            if (rows[0].count > 0) {
-                // Ενημέρωση μόνο του κωδικού (user_password) για υπάρχοντα χρήστη,
-                // αφήνοντας ανέπαφο το πεδίο user_role
-                const updateQuery = "UPDATE users SET user_password = ? WHERE user_email = ?";
-                await promisePool.query(updateQuery, [hashedPassword, user_email]);
-                return { modified: true };
-            } else {
-                // Δημιουργία νέου χρήστη χωρίς να ορίζεται ρητά το user_role.
-                // Έτσι, το πεδίο αυτό δεν τροποποιείται από αυτή τη λειτουργία
-                // (θα χρησιμοποιηθεί είτε η προκαθορισμένη τιμή της βάσης είτε
-                // θα οριστεί από κάποιο άλλο μηχανισμό).
-                const insertQuery = "INSERT INTO users (user_email, user_password) VALUES (?, ?)";
-                await promisePool.query(insertQuery, [user_email, hashedPassword]);
-                return { created: true };
-            }
+            const query = "UPDATE users SET user_password = ? WHERE user_email = ?";
+            await promisePool.query(query, [hashedPassword, user_email]);
+            return { updated: true };
         } catch (error) {
-            console.error("Error in createOrUpdateUser:", error.message);
+            console.error("Error in updateUserPassword:", error.message);
             throw error;
         }
     }
+    async deleteUser(user_email) {
+        try {
+          const query = "DELETE FROM users WHERE user_email = ?";
+          await promisePool.query(query, [user_email]);
+          return { deleted: true };
+        } catch (error) {
+          console.error("Error in deleteUser:", error.message);
+          throw error;
+        }
+    }
+    async createUser(user_email, hashedPassword) {
+        try {
+            const query = "INSERT INTO users (user_email, user_password, user_role) VALUES (?, ?, 'admin')";
+            await promisePool.query(query, [user_email, hashedPassword]);
+            return { created: true };
+        } catch (error) {
+            console.error("Error in createUser:", error.message);
+            throw error;
+        }
+    }
+    
 }
 module.exports = DbService;
