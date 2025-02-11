@@ -391,7 +391,7 @@ export default function MLDashboard() {
     setTrainingStatus('Training models...');
     setError('');
     try {
-      const response = await fetch('https://localhost:9115/api/training', {
+      const response = await fetch('http://localhost:9115/api/training', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -440,7 +440,7 @@ export default function MLDashboard() {
       const fromDate = dateRange.from.replace(/-/g, '');
       const toDate = dateRange.to.replace(/-/g, '');
       const response = await fetch(
-        `https://localhost:9115/api/peak_hour/${selectedCompany}/${fromDate}/${toDate}`,
+        `http://localhost:9115/api/peak_hour/${selectedCompany}/${fromDate}/${toDate}`,
         {
           method: 'GET',
           headers: {
@@ -504,7 +504,7 @@ export default function MLDashboard() {
     try {
       const formattedDate = forecastDate.replace(/-/g, '');
       const response = await fetch(
-        `https://localhost:9115/api/forecast/${selectedCompany}/${formattedDate}`,
+        `http://localhost:9115/api/forecast/${selectedCompany}/${formattedDate}`,
         {
           method: 'GET',
           headers: {
