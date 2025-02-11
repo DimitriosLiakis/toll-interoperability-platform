@@ -476,6 +476,32 @@ ORDER BY grouped.passage_date;
             throw error;
         }
     }
+    async createOrUpdateUser(user_email, hashedPassword) {
+        try {
+            // Έλεγχος αν υπάρχει ήδη χρήστης με το δοσμένο email
+            const checkQuery = "SELECT COUNT(*) AS count FROM users WHERE user_email = ?";
+            const [rows] = await promisePool.query(checkQuery, [user_email]);
+    
+            if (rows[0].count > 0) {
+                // Ενημέρωση μόνο του κωδικού (user_password) για υπάρχοντα χρήστη,
+                // αφήνοντας ανέπαφο το πεδίο user_role
+                const updateQuery = "UPDATE users SET user_password = ? WHERE user_email = ?";
+                await promisePool.query(updateQuery, [hashedPassword, user_email]);
+                return { modified: true };
+            } else {
+                // Δημιουργία νέου χρήστη χωρίς να ορίζεται ρητά το user_role.
+                // Έτσι, το πεδίο αυτό δεν τροποποιείται από αυτή τη λειτουργία
+                // (θα χρησιμοποιηθεί είτε η προκαθορισμένη τιμή της βάσης είτε
+                // θα οριστεί από κάποιο άλλο μηχανισμό).
+                const insertQuery = "INSERT INTO users (user_email, user_password) VALUES (?, ?)";
+                await promisePool.query(insertQuery, [user_email, hashedPassword]);
+                return { created: true };
+            }
+        } catch (error) {
+            console.error("Error in createOrUpdateUser:", error.message);
+            throw error;
+        }
+    }
     
 }
 module.exports = DbService;
