@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/admin_controller");
+const upload_controller = require("../controllers/upload_passages_controller");
 const { authenticateToken, authorizeRole } = require('../middlewares/authMiddleware');
 
 /**
@@ -110,6 +111,7 @@ router.post(
     "/addpasses",
     authenticateToken,
     authorizeRole(["admin"]),
+    upload_controller.uploadCsv,
     adminController.addPasses
 );
 

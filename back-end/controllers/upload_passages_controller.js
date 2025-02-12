@@ -1,76 +1,71 @@
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const { promisify } = require('util');
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+const { promisify } = require("util");
+
 const readFileAsync = promisify(fs.readFile);
 
 // Multer configuration for file storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.resolve(__dirname, '../uploads');
+    const uploadDir = path.resolve(__dirname, "../uploads");
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
     cb(null, uploadDir); // Save files in 'uploads' directory
   },
   filename: (req, file, cb) => {
-    const uploadPath = path.resolve(__dirname, '../uploads/passages.csv'); // Resolve path
+    const uploadPath = path.resolve(__dirname, "../uploads/passages.csv"); // Resolve path
     if (fs.existsSync(uploadPath)) {
       fs.unlinkSync(uploadPath);
     }
-    cb(null, 'passages.csv');
+    cb(null, "passages.csv");
   },
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Max size: 5 MB
+  limits: { fileSize: 10 * 1024 * 1024 }, // Max size: 10 MB
   fileFilter: (req, file, cb) => {
     const allowedTypes = /csv/; // Only allow CSV files
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = file.mimetype === 'text/csv';
+    const mimetype = file.mimetype === "text/csv";
 
     if (extname && mimetype) {
       cb(null, true);
     } else {
-      cb(new Error('Only CSV files are allowed.'));
+      cb(new Error("Only CSV files are allowed."));
     }
   },
-}).single('file');
+}).single("file");
 
-exports.uploadCsv = async (req, res) => {
+exports.uploadCsv = async (req, res, next) => {
   upload(req, res, async (err) => {
     if (err) {
-      // Handle Multer-specific errors or other internal server errors
-      return res.status(500).json({ message: 'Internal server error: ' + err.message });
+      return res.status(500).json({ message: "Internal server error: " + err.message });
     }
 
     if (!req.file) {
-      // Explicitly end the response to avoid hanging
-      return res.status(204).end(); // Use `.end()` to explicitly indicate the response is finished
+      console.warn("No file uploaded.");
+      return res.status(400).json({ message: "No file uploaded" });
     }
-    
 
-    const format = req.query.format || 'json';
+    console.log("CSV file uploaded successfully:", req.file.path);
 
-    if (format === 'csv') {
+    // Optional: Read file content if needed
+    const csvFilePath = path.resolve(__dirname, "../uploads/passages.csv");
+    const format = req.query.format || "json";
+
+    if (format === "csv") {
       try {
-        const fileContent = await readFileAsync(csvFilePath, 'utf8');
+        const fileContent = await readFileAsync(csvFilePath, "utf8");
+        console.log("CSV File Content Read Successfully");
       } catch (readError) {
-        console.error('Error reading the file:', readError);
-        return res.status(500).json({ message: 'Internal server error: ' + readError.message });
+        console.error("Error reading the file:", readError);
+        return res.status(500).json({ message: "Error reading file: " + readError.message });
       }
-      
-    } else {
-      // Return success response in JSON format
-      return res.status(200).json({
-        message: 'CSV file uploaded successfully!',
-        file: {
-          filename: 'passages.csv',
-          path: req.file.path,
-          size: req.file.size,
-        },
-      });
     }
+
+    next(); // Move to the next middleware (e.g., addPasses)
   });
 };
