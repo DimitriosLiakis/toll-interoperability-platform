@@ -738,28 +738,48 @@ async function userDelete(jwtToken, username) {
     }
 }
 
+const FormData = require('form-data'); // Ensure you have form-data installed
+
 async function addPasses(jwtToken, csvPath) {
-    const fs = require('fs');
-  
-    if (!fs.existsSync(csvPath)) {
-      console.error(`File not found: ${csvPath}`);
-      process.exit(1);
-    }
-  
-    const csvData = fs.readFileSync(csvPath, 'utf8');
-  
-    // Make POST request to /admin/addpasses
-    const response = await axios.post(`${BASE_URL}admin/addpasses`, 
-      { csv: csvData },
-      { headers: { 'x-observatory-auth': jwtToken } }
+  // 1️⃣ Check local file existence
+  if (!fs.existsSync(csvPath)) {
+    console.error(`❌ File not found: ${csvPath}`);
+    process.exit(1);
+  }
+
+  // 2️⃣ Prepare FormData for multipart/form-data
+  const formData = new FormData();
+  // The backend expects the file under field name "file" (multer .single("file"))
+  formData.append('file', fs.createReadStream(csvPath), path.basename(csvPath));
+
+  try {
+    // 3️⃣ Make POST request to /admin/addpasses with multipart headers
+    const response = await axios.post(
+      `${BASE_URL}admin/addpasses`,
+      formData,
+      {
+        headers: {
+          'x-observatory-auth': jwtToken,
+          ...formData.getHeaders(), // Must include form-data headers
+        },
+      }
     );
-  
-    if (response.status === 200) {
-      console.log(`Passes from ${csvPath} uploaded successfully.`);
+
+    // 4️⃣ Handle response
+    if (response.status === 200 && response.data.status === 'OK') {
+      console.log(`✅ Passes from "${csvPath}" uploaded successfully.`);
     } else {
-      console.error(`Failed to add passes: ${response.data.error || 'Unknown error'}`);
+      console.error(`❌ Failed to add passes: ${response.data.info || 'Unknown error'}`);
     }
+  } catch (error) {
+    if (error.response) {
+      console.error(`❌ Error uploading passes: ${error.response.data.info || error.response.data.error || 'Unknown error'}`);
+    } else {
+      console.error(`❌ Error uploading passes: ${error.message}`);
+    }
+  }
 }
+
 
 async function setUserRole(jwtToken, username, role) {
     try {

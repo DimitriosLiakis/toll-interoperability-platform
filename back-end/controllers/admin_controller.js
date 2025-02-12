@@ -4,6 +4,8 @@ const path = require("path");
 const csvParser = require("csv-parser");
 const { exec } = require("child_process");
 const bcrypt = require("bcrypt");
+const util = require('util');
+const execPromise = util.promisify(exec);
 
 exports.healthcheck = async (req, res) => {
     const dbServiceInstance = DbService.getDbServiceInstance();
@@ -117,35 +119,49 @@ exports.setUserRole = async (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 exports.addPasses = async (req, res) => {
     try {
-        // Define the predefined file path
-        const filePath = path.join(__dirname, "../uploads/passages.csv");
-        
-        console.log("Using predefined file:", filePath);
-
-        // Check if the file exists
-        if (!fs.existsSync(filePath)) {
-            console.error("File not found:", filePath);
-            return res.status(400).json({ status: "failed", info: "File not found: passages.csv" });
-        }
-
-        const pythonScript = path.join(__dirname, "../scripts/passage2mysql.py");
-        console.log("Python Script Path:", pythonScript);
-
-        // Execute the Python script to process the file
-        exec(`python3 ${pythonScript} ${filePath}`, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`Python script error: ${stderr}`);
-                return res.status(500).json({ status: "failed", info: stderr.trim() });
-            }
-
-            console.log(`Python script output: ${stdout}`);
-            res.status(200).json({ status: "OK" });
-        });
+      //Read the file path from request body
+      const filePath = req.body.source;
+      if (!filePath) {
+        return res
+          .status(400)
+          .json({ status: "failed", info: "No CSV file path provided. Use 'source' in the request body." });
+      }
+  
+      //Check if the file exists
+      if (!fs.existsSync(filePath)) {
+        console.error("File not found:", filePath);
+        return res
+          .status(400)
+          .json({ status: "failed", info: `File not found: ${filePath}` });
+      }
+  
+      //Build the Python script path
+      const pythonScript = path.join(__dirname, "../scripts/passage2mysql.py");
+      console.log("Python Script Path:", pythonScript);
+  
+      //Execute the Python script using the given filePath
+      const { stdout, stderr } = await execPromise(`python3 "${pythonScript}" "${filePath}"`);
+  
+      if (stderr) {
+        console.error(`Python script error: ${stderr}`);
+        return res
+          .status(500)
+          .json({ status: "failed", info: stderr.trim() });
+      }
+  
+      console.log(`Python script output: ${stdout}`);
+  
+      //Return success
+      return res.status(200).json({ status: "OK" });
+  
     } catch (error) {
-        console.error(`Error in addPasses: ${error.message}`);
-        res.status(500).json({ status: "failed", info: error.message });
+      console.error(`Error in addPasses: ${error.message}`);
+      return res
+        .status(500)
+        .json({ status: "failed", info: error.message });
     }
 };
 
