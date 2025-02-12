@@ -785,7 +785,7 @@ export default function MLDashboard() {
             <div className="mt-6">
               <LineChart width={800} height={400} data={forecastData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="tollName" />
+                <XAxis dataKey="tollName" tick={false} />
                 <YAxis />
                 <Tooltip />
                 <Legend />
