@@ -42,9 +42,10 @@ const chargesBy_controller = async (req, res, next) => {
 
         // Fetch data for each visiting operator
         for (const visitingOpID of visitingOperators) {
+            if (visitingOpID==tollOpID) continue;
             const debtDataRows = await dbService.getDebtBetween2companies(tollOpID, visitingOpID, formattedDateFrom, formattedDateTo);
             
-            if (debtDataRows.length === 0) continue; // Skip if no data
+            if (debtDataRows.length === 0 || visitingOpID==tollOpID) continue; // Skip if no data or the same company
             
             debtDataRows.forEach(debtData => {
                 response.vOpList.push({
