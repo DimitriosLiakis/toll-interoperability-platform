@@ -1,0 +1,687 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Documentation",
+    "version": "1.0.0",
+    "description": "This is the API documentation generated from JSDoc comments."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:9115/api",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/api/admin/healthcheck": {
+      "get": {
+        "summary": "Healthcheck endpoint for admin.",
+        "description": "Επιστρέφει πληροφορίες για την κατάσταση της βάσης δεδομένων και του συστήματος.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Επιτυχής απόκριση με τα στατιστικά της βάσης.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "dbconnection": {
+                      "type": "string"
+                    },
+                    "n_stations": {
+                      "type": "integer"
+                    },
+                    "n_tags": {
+                      "type": "integer"
+                    },
+                    "n_passes": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized."
+          }
+        }
+      }
+    },
+    "/api/admin/resetstations": {
+      "post": {
+        "summary": "Reset toll stations.",
+        "description": "Διαβάζει δεδομένα από αρχείο CSV και επαναφέρει τις σταθμίδες πληρωμής στη βάση δεδομένων.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Οι σταθμίδες επαναφέρθηκαν επιτυχώς.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Σφάλμα κατά την επαναφορά των σταθμίδων."
+          }
+        }
+      }
+    },
+    "/api/admin/resetpasses": {
+      "post": {
+        "summary": "Reset passes.",
+        "description": "Καθαρίζει τους πίνακες οφειλών και διέρξεων, και προαιρετικά επανεκκινεί τον admin λογαριασμό.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Οι διέρξεις επαναφέρθηκαν επιτυχώς.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Σφάλμα κατά την επαναφορά των διέρξεων."
+          }
+        }
+      }
+    },
+    "/api/admin/addpasses": {
+      "post": {
+        "summary": "Add passes.",
+        "description": "Επεξεργάζεται ένα προκαθορισμένο αρχείο CSV με δεδομένα διέρξεων μέσω Python script.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Οι διέρξεις προστέθηκαν επιτυχώς.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Δεν βρέθηκε το αρχείο passages.csv."
+          },
+          "500": {
+            "description": "Σφάλμα κατά την επεξεργασία των διέρξεων."
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "summary": "Retrieve list of users.",
+        "description": "Επιστρέφει μια λίστα με τα ονόματα χρηστών (users) που υπάρχουν στον admin module.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Επιστροφή επιτυχίας με τη λίστα χρηστών.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "users": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Σφάλμα κατά την ανάκτηση των χρηστών."
+          }
+        }
+      }
+    },
+    "/api/admin/usermod": {
+      "post": {
+        "summary": "Modify or create a user.",
+        "description": "Δημιουργεί ή ενημερώνει έναν χρήστη με δεδομένα username και passw.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Δεδομένα χρήστη για δημιουργία ή ενημέρωση.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "passw"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "passw": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ο χρήστης ενημερώθηκε ή δημιουργήθηκε επιτυχώς.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ελλιπή δεδομένα (missing username or password)."
+          },
+          "500": {
+            "description": "Σφάλμα κατά την ενημέρωση ή δημιουργία του χρήστη."
+          }
+        }
+      }
+    },
+    "/api/chargesBy/{tollOpID}/{date_from}/{date_to}": {
+      "get": {
+        "summary": "Retrieve toll transaction data and costs between companies.",
+        "description": "Returns toll transaction and cost data for a selected toll operator (tollOpID) within a specified date range.\nDates must be in YYYYMMDD format. The query parameter \"format\" can be used to request the response in CSV format (e.g., format=csv) or JSON (default).\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tollOpID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Toll operator ID. Allowed values: AM, EG, GE, KO, MO, NAO, NO, OO."
+          },
+          {
+            "in": "path",
+            "name": "date_from",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Start date in YYYYMMDD format."
+          },
+          {
+            "in": "path",
+            "name": "date_to",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "End date in YYYYMMDD format."
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "json"
+            },
+            "description": "Specifies the response format. Options: json or csv."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with the requested data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tollOpID": {
+                      "type": "string"
+                    },
+                    "requestTimestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "periodFrom": {
+                      "type": "string"
+                    },
+                    "periodTo": {
+                      "type": "string"
+                    },
+                    "vOpList": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "visitingOpID": {
+                            "type": "string"
+                          },
+                          "nPasses": {
+                            "type": "integer"
+                          },
+                          "passesCost": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request due to missing or invalid parameters."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/passAnalysis/{stationOpID}/{tagOpID}/{date_from}/{date_to}": {
+      "get": {
+        "summary": "Retrieve pass analysis data.",
+        "description": "Returns pass analysis data for a combination of station operator (stationOpID) and tag operator (tagOpID) within a specified date range.\nDates must be in YYYYMMDD format. The query parameter \"format\" can be used to request the response in CSV format (e.g., format=csv) or JSON (default).\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "stationOpID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Station operator ID."
+          },
+          {
+            "in": "path",
+            "name": "tagOpID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Tag operator ID."
+          },
+          {
+            "in": "path",
+            "name": "date_from",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Start date in YYYYMMDD format."
+          },
+          {
+            "in": "path",
+            "name": "date_to",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "End date in YYYYMMDD format."
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "json"
+            },
+            "description": "Specifies the response format. Options: json or csv."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with the requested data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stationOpID": {
+                      "type": "string"
+                    },
+                    "tagOpID": {
+                      "type": "string"
+                    },
+                    "requestTimestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "periodFrom": {
+                      "type": "string"
+                    },
+                    "periodTo": {
+                      "type": "string"
+                    },
+                    "nPasses": {
+                      "type": "integer"
+                    },
+                    "passList": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "passIndex": {
+                            "type": "integer"
+                          },
+                          "passID": {
+                            "type": "string"
+                          },
+                          "stationID": {
+                            "type": "string"
+                          },
+                          "timestamp": {
+                            "type": "string"
+                          },
+                          "tagID": {
+                            "type": "string"
+                          },
+                          "passCharge": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content. No pass analysis data found."
+          },
+          "400": {
+            "description": "Bad request due to missing or invalid parameters."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/passesCost/{tollOpID}/{tagOpID}/{date_from}/{date_to}": {
+      "get": {
+        "summary": "Retrieve pass cost data.",
+        "description": "Returns the toll pass cost data for a combination of toll operator (tollOpID) and tag operator (tagOpID) within a specified date range.\nDates must be in YYYYMMDD format. The query parameter \"format\" can be used to request the response in CSV format (e.g., format=csv) or JSON (default).\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tollOpID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Toll operator ID. Allowed values: AM, EG, GE, KO, MO, NAO, NO, OO."
+          },
+          {
+            "in": "path",
+            "name": "tagOpID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Tag operator ID. Allowed values: AM, EG, GE, KO, MO, NAO, NO, OO."
+          },
+          {
+            "in": "path",
+            "name": "date_from",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Start date in YYYYMMDD format."
+          },
+          {
+            "in": "path",
+            "name": "date_to",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "End date in YYYYMMDD format."
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "json"
+            },
+            "description": "Specifies the response format. Options: json or csv."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with the requested data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tollOpID": {
+                      "type": "string"
+                    },
+                    "tagOpID": {
+                      "type": "string"
+                    },
+                    "requestTimestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "periodFrom": {
+                      "type": "string"
+                    },
+                    "periodTo": {
+                      "type": "string"
+                    },
+                    "nPasses": {
+                      "type": "integer"
+                    },
+                    "passesCost": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content. No pass cost data found."
+          },
+          "400": {
+            "description": "Bad request due to missing or invalid parameters."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/tollStationPasses/{tollStationID}/{date_from}/{date_to}": {
+      "get": {
+        "summary": "Retrieve toll station pass data.",
+        "description": "Returns pass data for a specific toll station (tollStationID) within a specified date range.\nDates must be in YYYYMMDD format. The query parameter \"format\" can be used to request the response in CSV format (e.g., format=csv) or JSON (default).\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tollStationID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Toll station identifier. Must start with a valid operator code (AM, EG, GE, KO, MO, NAO, NO, OO)."
+          },
+          {
+            "in": "path",
+            "name": "date_from",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Start date in YYYYMMDD format."
+          },
+          {
+            "in": "path",
+            "name": "date_to",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "End date in YYYYMMDD format."
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "json"
+            },
+            "description": "Specifies the response format. Options: json or csv."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with the requested data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "passList": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "passIndex": {
+                            "type": "integer"
+                          },
+                          "passID": {
+                            "type": "string"
+                          },
+                          "timestamp": {
+                            "type": "string"
+                          },
+                          "tagID": {
+                            "type": "string"
+                          },
+                          "tagProvider": {
+                            "type": "string"
+                          },
+                          "passType": {
+                            "type": "string"
+                          },
+                          "passCharge": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content. No toll station pass data found."
+          },
+          "400": {
+            "description": "Bad request due to missing or invalid parameters."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    }
+  },
+  "components": {},
+  "tags": []
+}
